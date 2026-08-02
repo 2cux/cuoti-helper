@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>本地错题复习系统 · 技术验证</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f1f4f0; color: #1d2b24; }
+    main { width: min(1120px, calc(100% - 32px)); margin: 28px auto 48px; }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 18px; }
+    p { line-height: 1.55; }
+    .card { background: #fff; border: 1px solid #d9e2dc; border-radius: 10px; padding: 18px; margin-top: 16px; box-shadow: 0 2px 8px #1d2b2410; }
+    .muted { color: #5b6b62; }
+    .notice { padding: 12px; border-radius: 7px; background: #fff7d7; border: 1px solid #e5c65a; color: #684f00; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    button { appearance: none; border: 0; border-radius: 7px; padding: 10px 14px; font: inherit; font-weight: 650; color: #fff; background: #226b4a; cursor: pointer; }
+    button.secondary { background: #496256; }
+    button.danger { background: #a74f3f; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    button.loading::after { content: " …处理中"; }
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+    .status-item { border: 1px solid #dce6df; border-radius: 7px; padding: 11px; }
+    .status-item h3 { margin: 0 0 6px; font-size: 15px; }
+    .status-line { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+    .pill { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .success { color: #12613d; background: #dff3e7; }
+    .failure { color: #883729; background: #f8dfda; }
+    .warning { color: #705500; background: #fff0ad; }
+    .unsupported { color: #5b5c61; background: #e7e8eb; }
+    .cancelled { color: #654c81; background: #eee2fa; }
+    .value { word-break: break-word; }
+    #imagePreview { display: none; max-width: 100%; border: 1px solid #cfd9d2; border-radius: 7px; margin-top: 12px; }
+    .log { max-height: 360px; overflow: auto; background: #17221c; color: #d9f1df; border-radius: 7px; padding: 10px; font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .log-entry { border-bottom: 1px solid #ffffff18; padding: 5px 0; }
+    .log-entry:last-child { border-bottom: 0; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f4f7f4; border-radius: 7px; padding: 10px; }
+    @media (max-width: 640px) { main { width: min(100% - 20px, 1120px); margin-top: 16px; } .card { padding: 14px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>本地错题复习系统 · 第一阶段技术验证</h1>
+    <p class="muted">只验证 Edge 的 file:// 页面与本地文件夹读写能力，不包含正式产品功能。</p>
+
+    <section class="card">
+      <h2>环境检测</h2>
+      <div id="environmentGrid" class="status-grid" aria-live="polite"></div>
+      <p id="environmentSummary" class="notice">正在检测……</p>
+    </section>
+
+    <section class="card">
+      <h2>目录句柄</h2>
+      <div class="toolbar">
+        <button id="chooseDirectoryButton">选择测试文件夹</button>
+        <button id="requestPermissionButton" class="secondary" disabled>重新请求权限</button>
+        <button id="clearHandleButton" class="secondary">清除已保存句柄</button>
+      </div>
+      <p id="directoryStatus" class="muted">尚未选择目录。</p>
+      <p id="persistedStatus" class="muted">正在读取已保存句柄……</p>
+    </section>
+
+    <section class="card">
+      <h2>测试操作</h2>
+      <div class="toolbar">
+        <button id="runAllButton">运行全部测试</button>
+        <button id="deleteFilesButton" class="danger" disabled>删除测试文件</button>
+      </div>
+      <p id="finalResult" class="muted">尚未运行测试。</p>
+    </section>
+
+    <section class="card">
+      <h2>JSON 读取内容</h2>
+      <pre id="jsonOutput">暂无读取内容。</pre>
+    </section>
+
+    <section class="card">
+      <h2>图片读取结果</h2>
+      <p id="imageMeta" class="muted">暂无图片结果。</p>
+      <img id="imagePreview" alt="本地读取的测试图片">
+    </section>
+
+    <section class="card">
+      <h2>测试日志</h2>
+      <div id="log" class="log" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script>
+    'use strict';
+
+    const AppState = {
+      directoryHandle: null,
+      environment: null,
+      busy: false,
+      lastImageObjectUrl: null,
+      steps: []
+    };
+
+    const UI = {
+      environmentGrid: document.getElementById('environmentGrid'),
+      environmentSummary: document.getElementById('environmentSummary'),
+      directoryStatus: document.getElementById('directoryStatus'),
+      persistedStatus: document.getElementById('persistedStatus'),
+      jsonOutput: document.getElementById('jsonOutput'),
+      imageMeta: document.getElementById('imageMeta'),
+      imagePreview: document.getElementById('imagePreview'),
+      finalResult: document.getElementById('finalResult'),
+      log: document.getElementById('log'),
+      choose: document.getElementById('chooseDirectoryButton'),
+      request: document.getElementById('requestPermissionButton'),
+      clear: document.getElementById('clearHandleButton'),
+      run: document.getElementById('runAllButton'),
+      remove: document.getElementById('deleteFilesButton')
+    };
+
+    const TestLogger = {
+      write(testName, status, message) {
+        const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const timeNode = document.createElement('span');
+        timeNode.textContent = '[' + time + '] ';
+        const nameNode = document.createElement('strong');
+        nameNode.textContent = testName + ' · ';
+        const statusNode = document.createElement('span');
+        statusNode.className = 'pill ' + TestLogger.classFor(status);
+        statusNode.textContent = status;
+        const messageNode = document.createElement('span');
+        messageNode.textContent = ' ' + message;
+        entry.append(timeNode, nameNode, statusNode, messageNode);
+        UI.log.appendChild(entry);
+        UI.log.scrollTop = UI.log.scrollHeight;
+      },
+      classFor(status) {
+        return { '成功': 'success', '失败': 'failure', '不支持': 'unsupported', '已取消': 'cancelled', '警告': 'warning' }[status] || 'warning';
+      },
+      error(testName, step, error, suggestion) {
+        const name = error && error.name ? error.name : 'UnknownError';
+        const message = error && error.message ? error.message : String(error);
+        this.write(testName, '失败', '步骤：' + step + '；error.name=' + name + '；error.message=' + message + '；建议：' + suggestion);
+      }
+    };
+
+    const EnvironmentChecker = {
+      async run() {
+        const checks = [];
+        const add = (name, supported, value, note) => checks.push({ name, supported, value, note });
+        try { add('当前页面协议', location.protocol === 'file:', location.protocol, location.protocol === 'file:' ? '符合本阶段 file:// 验证条件。' : '本阶段预期通过 file:// 双击打开。'); } catch (error) { TestLogger.error('环境检测', '读取页面协议', error, '检查浏览器页面上下文。'); }
+        let secure = false;
+        try { secure = window.isSecureContext === true; add('安全上下文', secure, String(window.isSecureContext), secure ? '浏览器报告为安全上下文。' : 'file:// 页面可能被浏览器视为非安全上下文；请以实际 API 调用结果为准。'); } catch (error) { TestLogger.error('环境检测', '读取安全上下文', error, '确认 Edge 版本和页面来源。'); }
+        add('showDirectoryPicker', typeof window.showDirectoryPicker === 'function', typeof window.showDirectoryPicker, typeof window.showDirectoryPicker === 'function' ? '可以在用户点击按钮后请求目录。' : '不可用：本方案无法继续，不能用虚假替代实现。');
+        add('IndexedDB', 'indexedDB' in window, typeof window.indexedDB, '用于只保存目录句柄，不保存测试文件内容。');
+        add('Canvas', 'HTMLCanvasElement' in window, typeof window.HTMLCanvasElement, '用于生成测试图片。');
+        let webp = false;
+        try { const canvas = document.createElement('canvas'); webp = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0; } catch (error) { TestLogger.error('环境检测', 'WebP 编码检测', error, '检查 Edge 的 Canvas 编码能力。'); }
+        add('WebP 编码', webp, webp ? '可编码 image/webp' : '不可确认', webp ? 'Canvas 可以编码 WebP。' : 'WebP 主测试不能判定为成功，将尝试 PNG 对照。');
+        let blob = false;
+        try { new Blob(['validation'], { type: 'text/plain' }); blob = true; } catch (error) { TestLogger.error('环境检测', 'Blob 创建检测', error, '检查浏览器 Blob API。'); }
+        add('创建 Blob', blob, blob ? '可创建 Blob' : '创建失败', '图片保存依赖 Blob。');
+        add('浏览器 User Agent', Boolean(navigator.userAgent), navigator.userAgent || '不可读取', '用于记录实际浏览器环境。');
+        AppState.environment = { checks, canUseDirectory: checks.find(x => x.name === 'showDirectoryPicker').supported, canUseIndexedDB: checks.find(x => x.name === 'IndexedDB').supported };
+        UI.environmentGrid.replaceChildren();
+        for (const item of checks) {
+          const box = document.createElement('article'); box.className = 'status-item';
+          const title = document.createElement('h3'); title.textContent = item.name;
+          const line = document.createElement('div'); line.className = 'status-line';
+          const pill = document.createElement('span'); pill.className = 'pill ' + (item.supported ? 'success' : 'failure'); pill.textContent = item.supported ? '支持' : '不支持';
+          const value = document.createElement('span'); value.className = 'value'; value.textContent = '当前值：' + item.value;
+          const note = document.createElement('p'); note.className = 'muted'; note.textContent = item.note;
+          line.append(pill, value); box.append(title, line, note); UI.environmentGrid.appendChild(box);
+        }
+        UI.environmentSummary.textContent = AppState.environment.canUseDirectory ? '目录选择器可用：可以继续执行真实文件夹读写测试。' : 'showDirectoryPicker 不可用：该方案无法继续，请不要将本次验证判断为成功。';
+        UI.environmentSummary.className = AppState.environment.canUseDirectory ? 'notice' : 'notice';
+        TestLogger.write('环境检测', AppState.environment.canUseDirectory ? '成功' : '不支持', UI.environmentSummary.textContent);
+        return AppState.environment;
+      }
+    };
+
+    const DirectoryHandleStore = {
+      dbName: 'local-error-review-validation',
+      storeName: 'handles',
+      key: 'selected-directory',
+      open() {
+        return new Promise((resolve, reject) => {
+          try {
+            const request = indexedDB.open(this.dbName, 1);
+            request.onupgradeneeded = () => { try { request.result.createObjectStore(this.storeName); } catch (error) { reject(error); } };
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error || new Error('IndexedDB 打开失败'));
+          } catch (error) { reject(error); }
+        });
+      },
+      async save(handle) {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          try { const tx = db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(handle, this.key); tx.oncomplete = () => { db.close(); resolve(); }; tx.onerror = () => { db.close(); reject(tx.error || new Error('目录句柄保存失败')); }; } catch (error) { db.close(); reject(error); }
+        });
+      },
+      async load() {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          try { const tx = db.transaction(this.storeName, 'readonly'); const request = tx.objectStore(this.storeName).get(this.key); request.onsuccess = () => { db.close(); resolve(request.result || null); }; request.onerror = () => { db.close(); reject(request.error || new Error('目录句柄读取失败')); }; } catch (error) { db.close(); reject(error); }
+        });
+      },
+      async clear() {
+        const db = await this.open();
+        return new Promise((resolve, reject) => {
+          try { const tx = db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(this.key); tx.oncomplete = () => { db.close(); resolve(); }; tx.onerror = () => { db.close(); reject(tx.error || new Error('目录句柄清除失败')); }; } catch (error) { db.close(); reject(error); }
+        });
+      }
+    };
+
+    const PermissionManager = {
+      async query(handle) { return handle.queryPermission({ mode: 'readwrite' }); },
+      async request(handle) { return handle.requestPermission({ mode: 'readwrite' }); },
+      async refreshDisplay() {
+        if (!AppState.directoryHandle) { UI.directoryStatus.textContent = '尚未选择目录。'; UI.request.disabled = true; UI.remove.disabled = true; return 'prompt'; }
+        try { const permission = await this.query(AppState.directoryHandle); UI.directoryStatus.textContent = '文件夹：' + AppState.directoryHandle.name + '；当前权限：' + permission; UI.request.disabled = permission === 'granted'; UI.remove.disabled = permission !== 'granted'; return permission; } catch (error) { TestLogger.error('权限检查', 'queryPermission', error, '重新选择目录或点击重新请求权限。'); return 'denied'; }
+      }
+    };
+
+    const FileSystemTester = {
+      async chooseDirectory() {
+        if (!AppState.environment || !AppState.environment.canUseDirectory) { TestLogger.write('目录选择', '不支持', 'showDirectoryPicker 不可用；本方案无法继续。'); return false; }
+        try { const handle = await window.showDirectoryPicker({ mode: 'readwrite' }); AppState.directoryHandle = handle; await DirectoryHandleStore.save(handle); await PermissionManager.refreshDisplay(); UI.persistedStatus.textContent = '已保存当前目录句柄；IndexedDB 仅保存句柄。'; TestLogger.write('选择目录', '成功', '已选择文件夹：' + handle.name + '，已请求 readwrite 权限。'); return true; }
+        catch (error) { if (error && error.name === 'AbortError') TestLogger.write('选择目录', '已取消', '用户取消了目录选择。'); else TestLogger.error('选择目录', 'showDirectoryPicker', error, '确认用户主动点击，并在 Edge 中授予目录权限。'); return false; }
+      },
+      async writeJson() {
+        const data = { testId: 'local-error-review-validation', createdAt: new Date().toISOString(), protocol: location.protocol, random: this.randomString() };
+        await this.writeText('test-data.json', JSON.stringify(data, null, 2)); return data;
+      },
+      async readJson() { const file = await this.readFile('test-data.json'); const data = JSON.parse(await file.text()); UI.jsonOutput.textContent = JSON.stringify(data, null, 2); return data; },
+      async updateJson(data) { const updated = { ...data, updatedAt: new Date().toISOString(), random: this.randomString() }; await this.writeText('test-data.json', JSON.stringify(updated, null, 2)); return updated; },
+      async writeText(name, content) { const fileHandle = await AppState.directoryHandle.getFileHandle(name, { create: true }); const writable = await fileHandle.createWritable(); try { await writable.write(content); } finally { await writable.close(); } },
+      async readFile(name) { const fileHandle = await AppState.directoryHandle.getFileHandle(name); return fileHandle.getFile(); },
+      randomString() { if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID(); return Math.random().toString(36).slice(2) + Date.now().toString(36); },
+      makeCanvas() { const canvas = document.createElement('canvas'); canvas.width = 640; canvas.height = 360; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f5f8f5'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#226b4a'; ctx.fillRect(34, 32, 120, 80); ctx.beginPath(); ctx.arc(530, 88, 48, 0, Math.PI * 2); ctx.fillStyle = '#d6954c'; ctx.fill(); ctx.strokeStyle = '#a74f3f'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(90, 270); ctx.lineTo(550, 190); ctx.stroke(); ctx.fillStyle = '#1d2b24'; ctx.font = 'bold 30px system-ui'; ctx.fillText('本地错题系统测试', 34, 170); ctx.font = '22px system-ui'; ctx.fillText(new Date().toLocaleString('zh-CN'), 34, 320); return canvas; },
+      canvasBlob(canvas, type) { return new Promise((resolve, reject) => { try { canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Canvas 未生成 ' + type + ' Blob')), type); } catch (error) { reject(error); } }); },
+      async imageTest() {
+        const canvas = this.makeCanvas(); let webpError = null;
+        try { const blob = await this.canvasBlob(canvas, 'image/webp'); await this.writeBlob('test-image.webp', blob); const file = await this.readFile('test-image.webp'); await this.displayImage(file, 'WebP'); TestLogger.write('WebP 图片测试', '成功', '真实写入并重新读取 test-image.webp；文件大小：' + file.size + ' 字节。'); return { type: 'webp', file }; }
+        catch (error) { webpError = error; TestLogger.error('WebP 图片测试', '编码、写入或读取 WebP', error, '确认 WebP 编码支持和目录写权限；PNG 对照结果不能替代 WebP 成功。'); }
+        try { const png = await this.canvasBlob(canvas, 'image/png'); await this.writeBlob('test-image.png', png); const file = await this.readFile('test-image.png'); await this.displayImage(file, 'PNG 对照'); TestLogger.write('PNG 对照测试', '警告', 'PNG 对照成功，但这不能等同于 WebP 成功；原始 WebP 异常：' + (webpError.message || webpError)); return { type: 'png', file }; }
+        catch (error) { TestLogger.error('PNG 对照测试', 'PNG 编码、写入或读取', error, '检查 Canvas、Blob 和目录权限。'); return null; }
+      },
+      async writeBlob(name, blob) { const fileHandle = await AppState.directoryHandle.getFileHandle(name, { create: true }); const writable = await fileHandle.createWritable(); try { await writable.write(blob); } finally { await writable.close(); } },
+      displayImage(file, label) { return new Promise((resolve, reject) => { const url = URL.createObjectURL(file); if (AppState.lastImageObjectUrl) { try { URL.revokeObjectURL(AppState.lastImageObjectUrl); } catch (error) { TestLogger.error('图片清理', '撤销旧 Object URL', error, '刷新页面后重试。'); } } AppState.lastImageObjectUrl = url; const image = UI.imagePreview; image.onload = () => { UI.imageMeta.textContent = label + '：文件大小 ' + file.size + ' 字节；图片宽高 ' + image.naturalWidth + '×' + image.naturalHeight + '；MIME 类型 ' + file.type + '。Object URL 已在加载后撤销。'; try { URL.revokeObjectURL(url); } catch (error) { TestLogger.error('图片清理', '撤销 Object URL', error, '刷新页面后重试。'); } AppState.lastImageObjectUrl = null; image.style.display = 'block'; resolve(); }; image.onerror = () => { try { URL.revokeObjectURL(url); } catch (error) { TestLogger.error('图片清理', '撤销失败图片 URL', error, '刷新页面后重试。'); } reject(new Error('Object URL 图片加载失败')); }; image.src = url; }); },
+      async deleteFiles() { if (!AppState.directoryHandle) return; for (const name of ['test-data.json', 'test-image.webp', 'test-image.png']) { try { await AppState.directoryHandle.removeEntry(name); TestLogger.write('删除测试文件', '成功', name + ' 已删除。'); } catch (error) { if (error && error.name === 'NotFoundError') TestLogger.write('删除测试文件', '警告', name + '：文件不存在。'); else TestLogger.error('删除测试文件', name, error, '确认目录权限仍为 granted。'); } } }
+    };
+
+    const App = {
+      async checkStoredHandle() {
+        if (!AppState.environment || !AppState.environment.canUseIndexedDB) { UI.persistedStatus.textContent = 'IndexedDB 不可用，无法持久化目录句柄。'; return; }
+        try { const handle = await DirectoryHandleStore.load(); if (!handle) { UI.persistedStatus.textContent = '未找到已保存目录句柄。'; TestLogger.write('读取已保存句柄', '成功', '未找到已保存句柄。'); return; } AppState.directoryHandle = handle; const permission = await PermissionManager.refreshDisplay(); let accessible = false; if (permission === 'granted') { try { await handle.getFileHandle('test-data.json'); accessible = true; } catch (error) { if (error && error.name === 'NotFoundError') accessible = false; else throw error; } } UI.persistedStatus.textContent = '找到已保存句柄；文件夹：' + handle.name + '；当前权限：' + permission + '；可以重新访问测试文件：' + (accessible ? '是' : '否（文件不存在或尚未授权）') + '。'; TestLogger.write('读取已保存句柄', '成功', UI.persistedStatus.textContent); }
+        catch (error) { UI.persistedStatus.textContent = '读取已保存句柄失败。'; TestLogger.error('读取已保存句柄', 'IndexedDB 或 queryPermission', error, '重新选择原文件夹并重新授权。'); }
+      },
+      setBusy(value) { AppState.busy = value; for (const button of [UI.choose, UI.request, UI.clear, UI.run, UI.remove]) button.disabled = value || (button === UI.request && !AppState.directoryHandle) || (button === UI.remove && !AppState.directoryHandle); UI.run.classList.toggle('loading', value); },
+      async runStep(name, action) { try { const result = await action(); TestLogger.write(name, '成功', '步骤完成。'); return { ok: true, result }; } catch (error) { TestLogger.error(name, name, error, '检查失败步骤提示，并确认目录权限、文件占用和 Edge 设置。'); return { ok: false, error }; } },
+      async runAll() {
+        if (AppState.busy) return; this.setBusy(true); UI.finalResult.textContent = '测试进行中……'; AppState.steps = [];
+        try {
+          const env = await EnvironmentChecker.run(); AppState.steps.push(env.canUseDirectory ? '环境检测成功' : '环境不支持');
+          if (!env.canUseDirectory) { UI.finalResult.textContent = '未通过：showDirectoryPicker 不可用，本方案无法继续。'; return; }
+          if (!AppState.directoryHandle) { TestLogger.write('权限检查', '警告', '尚未选择目录；请先点击“选择测试文件夹”。'); UI.finalResult.textContent = '未完成：请先选择测试文件夹。'; return; }
+          const permission = await PermissionManager.refreshDisplay(); if (permission !== 'granted') { TestLogger.write('权限检查', '失败', '当前权限为 ' + permission + '；请点击“重新请求权限”。'); UI.finalResult.textContent = '未通过：目录没有 readwrite 权限。'; return; }
+          const created = await this.runStep('创建 JSON', () => FileSystemTester.writeJson()); AppState.steps.push(created.ok ? 'JSON 创建成功' : 'JSON 创建失败');
+          if (created.ok) { const read = await this.runStep('读取 JSON', () => FileSystemTester.readJson()); AppState.steps.push(read.ok ? 'JSON 读取成功' : 'JSON 读取失败'); if (read.ok) { const updated = await this.runStep('修改 JSON', () => FileSystemTester.updateJson(read.result)); AppState.steps.push(updated.ok ? 'JSON 修改写入成功' : 'JSON 修改失败'); if (updated.ok) { const verify = await this.runStep('验证 JSON 修改', async () => { const reread = await FileSystemTester.readJson(); if (reread.random !== updated.result.random || reread.updatedAt !== updated.result.updatedAt) throw new Error('重新读取内容与修改后的值不一致'); return reread; }); AppState.steps.push(verify.ok ? 'JSON 修改验证成功' : 'JSON 修改验证失败'); } } }
+          const image = await FileSystemTester.imageTest(); AppState.steps.push(image && image.type === 'webp' ? 'WebP 成功' : 'WebP 未成功');
+          await this.checkStoredHandle(); AppState.steps.push('目录句柄验证完成');
+          const hardFailures = AppState.steps.filter(x => /失败|未成功/.test(x)); UI.finalResult.textContent = hardFailures.length ? '测试完成，但未全部通过：' + hardFailures.join('；') + '。' : '测试完成：环境、JSON、WebP、图片读取和目录句柄流程均通过。';
+        } catch (error) { TestLogger.error('运行全部测试', '总流程', error, '查看日志中的具体步骤，单独重试可继续排查。'); UI.finalResult.textContent = '测试异常终止，但异常已记录在日志中。'; }
+        finally { this.setBusy(false); await PermissionManager.refreshDisplay(); }
+      },
+      async requestPermission() { if (!AppState.directoryHandle) return; try { const state = await PermissionManager.request(AppState.directoryHandle); await PermissionManager.refreshDisplay(); TestLogger.write('重新请求权限', state === 'granted' ? '成功' : '警告', '权限结果：' + state); } catch (error) { if (error && error.name === 'AbortError') TestLogger.write('重新请求权限', '已取消', '用户取消授权。'); else TestLogger.error('重新请求权限', 'requestPermission', error, '请通过按钮主动触发，并在 Edge 权限提示中选择允许。'); } },
+      async clearHandle() { try { await DirectoryHandleStore.clear(); AppState.directoryHandle = null; await PermissionManager.refreshDisplay(); UI.persistedStatus.textContent = '已清除浏览器中保存的目录句柄；本地测试文件未被删除。'; TestLogger.write('清除已保存句柄', '成功', UI.persistedStatus.textContent); } catch (error) { TestLogger.error('清除已保存句柄', 'IndexedDB delete', error, '检查 IndexedDB 是否可用。'); } }
+    };
+
+    UI.choose.addEventListener('click', () => { void FileSystemTester.chooseDirectory(); });
+    UI.request.addEventListener('click', () => { void App.requestPermission(); });
+    UI.clear.addEventListener('click', () => { void App.clearHandle(); });
+    UI.run.addEventListener('click', () => { void App.runAll(); });
+    UI.remove.addEventListener('click', () => { if (AppState.busy) return; if (window.confirm('确定删除 test-data.json 和 test-image.webp 吗？')) void FileSystemTester.deleteFiles(); else TestLogger.write('删除测试文件', '已取消', '用户取消了删除操作。'); });
+    window.addEventListener('unhandledrejection', event => { event.preventDefault(); TestLogger.error('全局异常', '未处理 Promise', event.reason, '查看具体异常后重试；本页面已阻止异常冒泡。'); });
+    window.addEventListener('error', event => { TestLogger.error('全局异常', '脚本运行', event.error || new Error(event.message), '查看日志并重新打开 HTML。'); });
+
+    (async () => { try { await EnvironmentChecker.run(); await App.checkStoredHandle(); } catch (error) { TestLogger.error('页面启动', '初始化', error, '重新打开 HTML，并检查浏览器是否允许 file:// 页面使用 IndexedDB。'); } })();
+  </script>
+</body>
+</html>
