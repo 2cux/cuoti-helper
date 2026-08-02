@@ -223,17 +223,31 @@
           document.querySelector('[data-view="home"] h1,[data-view="home"] h2')?.focus?.();
         }catch(e){ErrorManager.show(e,'无法返回首页，请重新加载页面。');}
       }
-       async function refreshHomeDashboardData(){renderStats();window.renderHomeDashboard?.();window.renderUnconnectedHome?.();}
-       handleReviewReturnHome=async function(){
-         if(AppState.reviewSession?.isSubmittingResult){Toast.show('正在保存当前结果，请稍候','warning');return;}
-         ReviewSessionManager.end();
-         releaseCurrentQuestionResources();
+       ReviewSessionManager.endSession=ReviewSessionManager.end;
+       function resetReviewState(){
          AppState.reviewSession=null;
          AppState.currentQuestionId=null;
          AppState.answerVisible=false;
          AppState.done=0;
-         await refreshHomeDashboardData();
+         answerVisible=false;
+         done.textContent='0';
+       }
+       async function refreshHomeDashboardData(){
+         window.renderHomeDashboard?.();
+         window.renderUnconnectedHome?.();
+       }
+       function renderHomeFromCurrentState(){
+         window.renderHomeDashboard?.();
+         window.renderUnconnectedHome?.();
+       }
+       handleReviewReturnHome=async function(){
+         if(AppState.reviewSession?.isSubmittingResult){Toast.show('正在保存当前结果，请稍候','warning');return;}
+         ReviewSessionManager.endSession();
+         releaseCurrentQuestionResources();
+         resetReviewState();
          AppRouter.navigate('home');
+         await refreshHomeDashboardData();
+         renderHomeFromCurrentState();
        };
        function openReviewConnectionDialog(){
         const hasLast=Boolean(window.lastLibrary?.handle||FolderManager.handle);
