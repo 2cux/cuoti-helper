@@ -1,292 +1,38 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>本地错题复习系统 · 技术验证</title>
-  <style>
-    :root { color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-    body { margin: 0; background: #f1f4f0; color: #1d2b24; }
-    main { width: min(1120px, calc(100% - 32px)); margin: 28px auto 48px; }
-    h1, h2 { margin: 0 0 12px; }
-    h1 { font-size: 26px; }
-    h2 { font-size: 18px; }
-    p { line-height: 1.55; }
-    .card { background: #fff; border: 1px solid #d9e2dc; border-radius: 10px; padding: 18px; margin-top: 16px; box-shadow: 0 2px 8px #1d2b2410; }
-    .muted { color: #5b6b62; }
-    .notice { padding: 12px; border-radius: 7px; background: #fff7d7; border: 1px solid #e5c65a; color: #684f00; }
-    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    button { appearance: none; border: 0; border-radius: 7px; padding: 10px 14px; font: inherit; font-weight: 650; color: #fff; background: #226b4a; cursor: pointer; }
-    button.secondary { background: #496256; }
-    button.danger { background: #a74f3f; }
-    button:disabled { cursor: not-allowed; opacity: .55; }
-    button.loading::after { content: " …处理中"; }
-    .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
-    .status-item { border: 1px solid #dce6df; border-radius: 7px; padding: 11px; }
-    .status-item h3 { margin: 0 0 6px; font-size: 15px; }
-    .status-line { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-    .pill { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-    .success { color: #12613d; background: #dff3e7; }
-    .failure { color: #883729; background: #f8dfda; }
-    .warning { color: #705500; background: #fff0ad; }
-    .unsupported { color: #5b5c61; background: #e7e8eb; }
-    .cancelled { color: #654c81; background: #eee2fa; }
-    .value { word-break: break-word; }
-    #imagePreview { display: none; max-width: 100%; border: 1px solid #cfd9d2; border-radius: 7px; margin-top: 12px; }
-    .log { max-height: 360px; overflow: auto; background: #17221c; color: #d9f1df; border-radius: 7px; padding: 10px; font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; }
-    .log-entry { border-bottom: 1px solid #ffffff18; padding: 5px 0; }
-    .log-entry:last-child { border-bottom: 0; }
-    pre { white-space: pre-wrap; word-break: break-word; background: #f4f7f4; border-radius: 7px; padding: 10px; }
-    @media (max-width: 640px) { main { width: min(100% - 20px, 1120px); margin-top: 16px; } .card { padding: 14px; } }
-  </style>
-</head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>错重做 · 朜错复习系统</title>
+<style>
+:root{--bg:#f3f6f4;--surface:#fff;--soft:#e9efec;--green-soft:#e2f1eb;--ink:#111514;--text:#252a28;--muted:#69716d;--subtle:#8c9490;--brand:#078d6d;--brand-dark:#07392d;--brand-soft:#cce9df;--action:#d94b36;--action-hover:#c43e2b;--action-soft:#f5ddd8;--warning:#c68a24;--border:rgba(17,21,20,.11);--border-strong:rgba(17,21,20,.22);--shadow:0 1px 2px rgba(17,21,20,.04),0 12px 32px rgba(17,21,20,.05);--r:22px;--fast:160ms;--normal:240ms;--ease:cubic-bezier(.22,1,.36,1);font-family:"Segoe UI Variable","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);min-width:320px}button{font:inherit;border:0;cursor:pointer}button:focus-visible,[tabindex]:focus-visible,a:focus-visible{outline:2px solid var(--brand);outline-offset:3px}button:disabled{opacity:.52;cursor:not-allowed}.topbar{position:sticky;top:0;z-index:20;height:68px;background:rgba(243,246,244,.96);border-bottom:1px solid var(--border);display:flex;align-items:center}.topbar-inner,.page{width:min(1280px,calc(100% - 48px));margin:auto}.topbar-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}.brand{display:flex;align-items:center;gap:11px;color:var(--ink);font-weight:750;text-decoration:none}.brand-mark{width:34px;height:34px;border-radius:11px;background:var(--brand-dark);display:grid;place-items:center;color:#fff}.brand-mark svg{width:22px}.desktop-nav{display:flex;gap:5px}.nav-link{min-height:44px;padding:0 14px;border-radius:12px;background:transparent;color:var(--muted);font-weight:650}.nav-link:hover{background:var(--soft);color:var(--ink)}.nav-link.active{color:var(--brand-dark);background:var(--brand-soft)}.connection{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}.dot{width:8px;height:8px;border-radius:50%;background:var(--brand)}.menu{display:none;width:44px;height:44px;border-radius:12px;background:var(--surface);color:var(--ink)}.mobile-nav{display:none}.page{padding:64px 0 80px}.view{display:none;animation:in var(--normal) var(--ease)}.view.active{display:block}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}.eyebrow{margin:0 0 18px;color:var(--brand);font-size:12px;font-weight:800;letter-spacing:.14em}.hero-title,.section-title{margin:0;color:var(--ink);letter-spacing:-.06em}.hero-title{font-size:clamp(40px,6vw,76px);line-height:1.02}.hero-title em{font-style:normal;color:var(--brand)}.lead{max-width:600px;color:var(--muted);font-size:17px;line-height:1.75;margin:24px 0 0}.split{display:grid;grid-template-columns:7fr 5fr;gap:56px;align-items:center}.init{min-height:calc(100vh - 212px)}.btn{min-height:48px;padding:0 19px;border-radius:14px;font-weight:750;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:transform var(--fast),background var(--fast)}.btn:hover{transform:translateY(-1px)}.btn:active{transform:none}.primary{background:var(--action);color:#fff}.primary:hover{background:var(--action-hover)}.brand-btn{background:var(--brand);color:#fff}.brand-btn:hover{background:#06775c}.secondary{background:var(--surface);border:1px solid var(--border-strong);color:var(--text)}.secondary:hover{background:var(--soft)}.ghost{background:transparent;color:var(--muted)}.danger{background:var(--action-soft);color:var(--action)}.large{min-height:52px}.button-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:34px}.status-stack{display:grid;gap:12px}.status,.card,.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}.status{padding:22px 24px;display:flex;gap:16px}.status-icon{width:38px;height:38px;flex:none;border-radius:12px;background:var(--green-soft);color:var(--brand);display:grid;place-items:center}.status h3{margin:0 0 5px;color:var(--ink);font-size:15px}.status p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}.status strong{display:block;color:var(--brand-dark);font-size:13px;margin-top:7px}.note{color:var(--subtle);font-size:12px;line-height:1.6}.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:38px}.section-title{font-size:clamp(30px,4vw,48px)}.section-subtitle{margin:10px 0 0;color:var(--muted);line-height:1.65}.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.stat{padding:22px;border-radius:18px;box-shadow:none}.stat-label{color:var(--muted);font-size:13px}.stat-value{font-size:32px;letter-spacing:-.05em;color:var(--ink);font-weight:760;margin-top:10px}.stat-meta{color:var(--subtle);font-size:12px;margin-top:6px}.home-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-top:18px}.card{padding:28px;box-shadow:var(--shadow)}.card h2{margin:0;color:var(--ink);font-size:22px;letter-spacing:-.035em}.card p{line-height:1.65}.review-card{background:var(--brand-dark);border-color:transparent;min-height:260px;display:flex;flex-direction:column;justify-content:space-between}.review-card h2{color:#fff;font-size:30px}.review-card p{color:#c4d7d0}.review-card .eyebrow{color:#8ed9bf}.review-card .btn{background:#fff;color:var(--brand-dark)}.folder{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:18px}.folder strong{display:block;color:var(--ink);margin-bottom:5px}.folder span{color:var(--muted);font-size:13px}.badge{display:inline-flex;align-items:center;gap:7px;background:var(--green-soft);color:var(--brand-dark);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;white-space:nowrap}.badge:before{content:"";width:7px;height:7px;background:var(--brand);border-radius:50%}.capture-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.capture-panel{min-height:480px;display:flex;flex-direction:column}.capture-panel h2{display:flex;justify-content:space-between}.count{font-size:13px;font-weight:650;color:var(--muted)}.paste{flex:1;min-height:300px;margin-top:20px;border:1.5px dashed var(--border-strong);border-radius:18px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}.paste.focused,.paste:focus{border-color:var(--brand);background:var(--green-soft);outline:none}.paste svg{color:var(--brand);margin-bottom:16px}.paste strong{color:var(--ink)}.paste span{color:var(--muted);font-size:13px;margin-top:8px}.previews{display:grid;gap:10px;margin-top:18px}.preview{display:flex;align-items:center;gap:12px;padding:10px;border:1px solid var(--border);border-radius:14px;background:var(--bg)}.thumb{width:64px;height:44px;border-radius:9px;background:#d9e7e0;display:grid;place-items:center;color:var(--brand);font-size:11px;font-weight:750}.preview-info{flex:1;min-width:0}.preview-info strong,.preview-info span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.preview-info strong{font-size:13px;color:var(--ink)}.preview-info span{font-size:11px;color:var(--muted);margin-top:4px}.preview-actions{display:flex}.preview-actions button{background:transparent;color:var(--muted);width:32px;height:32px;border-radius:8px}.capture-footer{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:15px}.capture-footer span{color:var(--muted);font-size:13px}.review-wrap{max-width:980px;margin:auto}.review-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}.review-progress{font-size:13px;color:var(--muted)}.question-card{padding:clamp(24px,5vw,52px);text-align:center}.question-image{height:340px;border-radius:18px;background:linear-gradient(135deg,#e1efe9,#f5ede0);display:grid;place-items:center;position:relative;overflow:hidden}.question-image:before{content:"错图片 · 模拟展示";color:var(--brand-dark);font-weight:750;letter-spacing:.08em}.question-image:after{content:"Q  12 × 7 = ?";position:absolute;bottom:24px;right:28px;color:var(--action);font-size:20px;font-weight:800}.question-card>.btn{margin-top:24px}.answer{display:none;margin-top:18px;padding-top:24px;border-top:1px solid var(--border);text-align:left}.answer.open{display:block;animation:in var(--fast) var(--ease)}.answer-image{height:160px;border-radius:14px;background:var(--soft);display:grid;place-items:center;color:var(--muted)}.answer-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.data-overview{grid-column:1/-1}.data-card{padding:22px}.data-card h3{margin:0;color:var(--ink);font-size:15px}.big{font-size:30px;color:var(--ink);font-weight:750;margin-top:12px}.folder-card{grid-column:span 2}.progress{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin-top:14px}.progress span{display:block;height:100%;width:62%;background:var(--brand);border-radius:inherit}.data-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.toast-region{position:fixed;right:24px;bottom:24px;z-index:60;display:grid;gap:10px;width:min(360px,calc(100% - 36px))}.toast{background:var(--brand-dark);color:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 12px 30px rgba(7,57,45,.2);animation:toastIn var(--normal) var(--ease);font-size:14px}.toast.warning{background:#76541d}.toast.error{background:#8d3428}@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}.backdrop{position:fixed;inset:0;background:rgba(7,18,14,.54);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}.backdrop.open{display:flex;animation:in var(--fast) var(--ease)}.modal{width:min(480px,100%);background:#fff;border-radius:22px;padding:26px;box-shadow:0 24px 70px rgba(0,0,0,.2)}.modal h2{margin:0;color:var(--ink)}.modal p{color:var(--muted);line-height:1.6}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}.checkline{display:flex;gap:10px;align-items:flex-start;margin-top:18px;font-size:14px}.viewer .modal{width:min(920px,100%);background:#111514;color:#fff}.viewer .modal h2{color:#fff}.viewer-image{height:min(70vh,620px);display:grid;place-items:center;background:#070a09;border-radius:14px;color:#b9cbc4}.viewer .modal-actions{justify-content:space-between}.viewer .ghost{color:#fff}@media(max-width:1024px){.topbar-inner,.page{width:min(100% - 40px,1280px)}.split{gap:34px}.home-grid{grid-template-columns:1fr}.data-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:767px){.topbar{height:62px}.topbar-inner,.page{width:calc(100% - 36px)}.desktop-nav,.connection{display:none}.menu{display:grid;place-items:center}.topbar-inner{position:relative}.mobile-nav{position:absolute;top:62px;left:0;right:0;padding:10px 18px 16px;background:var(--bg);border-bottom:1px solid var(--border);display:none}.mobile-nav.open{display:grid;gap:5px}.mobile-nav .nav-link{text-align:left}.page{padding:42px 0 60px}.split{grid-template-columns:1fr;min-height:auto}.hero-title{font-size:clamp(42px,13vw,60px)}.lead{font-size:15px}.button-row .btn{width:100%}.status{padding:18px}.stat-grid,.data-grid{grid-template-columns:1fr 1fr}.capture-grid{grid-template-columns:1fr}.capture-panel{min-height:380px}.paste{min-height:220px}.section-head{align-items:flex-start;flex-direction:column;margin-bottom:26px}.card{padding:20px}.question-image{height:250px}.folder-card{grid-column:1/-1}.data-overview{grid-column:1/-1}.toast-region{right:18px;bottom:18px}}@media(max-width:430px){.stat-grid,.data-grid{grid-template-columns:1fr}.data-card{grid-column:1/-1}.capture-footer{align-items:flex-start;flex-direction:column}.capture-footer .btn{width:100%}.question-card{padding:16px}.question-image{height:210px}.review-top{gap:12px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style></head>
 <body>
-  <main>
-    <h1>本地错题复习系统 · 第一阶段技术验证</h1>
-    <p class="muted">只验证 Edge 的 file:// 页面与本地文件夹读写能力，不包含正式产品功能。</p>
-
-    <section class="card">
-      <h2>环境检测</h2>
-      <div id="environmentGrid" class="status-grid" aria-live="polite"></div>
-      <p id="environmentSummary" class="notice">正在检测……</p>
-    </section>
-
-    <section class="card">
-      <h2>目录句柄</h2>
-      <div class="toolbar">
-        <button id="chooseDirectoryButton">选择测试文件夹</button>
-        <button id="requestPermissionButton" class="secondary" disabled>重新请求权限</button>
-        <button id="clearHandleButton" class="secondary">清除已保存句柄</button>
-      </div>
-      <p id="directoryStatus" class="muted">尚未选择目录。</p>
-      <p id="persistedStatus" class="muted">正在读取已保存句柄……</p>
-    </section>
-
-    <section class="card">
-      <h2>测试操作</h2>
-      <div class="toolbar">
-        <button id="runAllButton">运行全部测试</button>
-        <button id="deleteFilesButton" class="danger" disabled>删除测试文件</button>
-      </div>
-      <p id="finalResult" class="muted">尚未运行测试。</p>
-    </section>
-
-    <section class="card">
-      <h2>JSON 读取内容</h2>
-      <pre id="jsonOutput">暂无读取内容。</pre>
-    </section>
-
-    <section class="card">
-      <h2>图片读取结果</h2>
-      <p id="imageMeta" class="muted">暂无图片结果。</p>
-      <img id="imagePreview" alt="本地读取的测试图片">
-    </section>
-
-    <section class="card">
-      <h2>测试日志</h2>
-      <div id="log" class="log" aria-live="polite"></div>
-    </section>
-  </main>
-
-  <script>
-    'use strict';
-
-    const AppState = {
-      directoryHandle: null,
-      environment: null,
-      busy: false,
-      lastImageObjectUrl: null,
-      steps: []
-    };
-
-    const UI = {
-      environmentGrid: document.getElementById('environmentGrid'),
-      environmentSummary: document.getElementById('environmentSummary'),
-      directoryStatus: document.getElementById('directoryStatus'),
-      persistedStatus: document.getElementById('persistedStatus'),
-      jsonOutput: document.getElementById('jsonOutput'),
-      imageMeta: document.getElementById('imageMeta'),
-      imagePreview: document.getElementById('imagePreview'),
-      finalResult: document.getElementById('finalResult'),
-      log: document.getElementById('log'),
-      choose: document.getElementById('chooseDirectoryButton'),
-      request: document.getElementById('requestPermissionButton'),
-      clear: document.getElementById('clearHandleButton'),
-      run: document.getElementById('runAllButton'),
-      remove: document.getElementById('deleteFilesButton')
-    };
-
-    const TestLogger = {
-      write(testName, status, message) {
-        const time = new Date().toLocaleTimeString('zh-CN', { hour12: false });
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        const timeNode = document.createElement('span');
-        timeNode.textContent = '[' + time + '] ';
-        const nameNode = document.createElement('strong');
-        nameNode.textContent = testName + ' · ';
-        const statusNode = document.createElement('span');
-        statusNode.className = 'pill ' + TestLogger.classFor(status);
-        statusNode.textContent = status;
-        const messageNode = document.createElement('span');
-        messageNode.textContent = ' ' + message;
-        entry.append(timeNode, nameNode, statusNode, messageNode);
-        UI.log.appendChild(entry);
-        UI.log.scrollTop = UI.log.scrollHeight;
-      },
-      classFor(status) {
-        return { '成功': 'success', '失败': 'failure', '不支持': 'unsupported', '已取消': 'cancelled', '警告': 'warning' }[status] || 'warning';
-      },
-      error(testName, step, error, suggestion) {
-        const name = error && error.name ? error.name : 'UnknownError';
-        const message = error && error.message ? error.message : String(error);
-        this.write(testName, '失败', '步骤：' + step + '；error.name=' + name + '；error.message=' + message + '；建议：' + suggestion);
-      }
-    };
-
-    const EnvironmentChecker = {
-      async run() {
-        const checks = [];
-        const add = (name, supported, value, note) => checks.push({ name, supported, value, note });
-        try { add('当前页面协议', location.protocol === 'file:', location.protocol, location.protocol === 'file:' ? '符合本阶段 file:// 验证条件。' : '本阶段预期通过 file:// 双击打开。'); } catch (error) { TestLogger.error('环境检测', '读取页面协议', error, '检查浏览器页面上下文。'); }
-        let secure = false;
-        try { secure = window.isSecureContext === true; add('安全上下文', secure, String(window.isSecureContext), secure ? '浏览器报告为安全上下文。' : 'file:// 页面可能被浏览器视为非安全上下文；请以实际 API 调用结果为准。'); } catch (error) { TestLogger.error('环境检测', '读取安全上下文', error, '确认 Edge 版本和页面来源。'); }
-        add('showDirectoryPicker', typeof window.showDirectoryPicker === 'function', typeof window.showDirectoryPicker, typeof window.showDirectoryPicker === 'function' ? '可以在用户点击按钮后请求目录。' : '不可用：本方案无法继续，不能用虚假替代实现。');
-        add('IndexedDB', 'indexedDB' in window, typeof window.indexedDB, '用于只保存目录句柄，不保存测试文件内容。');
-        add('Canvas', 'HTMLCanvasElement' in window, typeof window.HTMLCanvasElement, '用于生成测试图片。');
-        let webp = false;
-        try { const canvas = document.createElement('canvas'); webp = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0; } catch (error) { TestLogger.error('环境检测', 'WebP 编码检测', error, '检查 Edge 的 Canvas 编码能力。'); }
-        add('WebP 编码', webp, webp ? '可编码 image/webp' : '不可确认', webp ? 'Canvas 可以编码 WebP。' : 'WebP 主测试不能判定为成功，将尝试 PNG 对照。');
-        let blob = false;
-        try { new Blob(['validation'], { type: 'text/plain' }); blob = true; } catch (error) { TestLogger.error('环境检测', 'Blob 创建检测', error, '检查浏览器 Blob API。'); }
-        add('创建 Blob', blob, blob ? '可创建 Blob' : '创建失败', '图片保存依赖 Blob。');
-        add('浏览器 User Agent', Boolean(navigator.userAgent), navigator.userAgent || '不可读取', '用于记录实际浏览器环境。');
-        AppState.environment = { checks, canUseDirectory: checks.find(x => x.name === 'showDirectoryPicker').supported, canUseIndexedDB: checks.find(x => x.name === 'IndexedDB').supported };
-        UI.environmentGrid.replaceChildren();
-        for (const item of checks) {
-          const box = document.createElement('article'); box.className = 'status-item';
-          const title = document.createElement('h3'); title.textContent = item.name;
-          const line = document.createElement('div'); line.className = 'status-line';
-          const pill = document.createElement('span'); pill.className = 'pill ' + (item.supported ? 'success' : 'failure'); pill.textContent = item.supported ? '支持' : '不支持';
-          const value = document.createElement('span'); value.className = 'value'; value.textContent = '当前值：' + item.value;
-          const note = document.createElement('p'); note.className = 'muted'; note.textContent = item.note;
-          line.append(pill, value); box.append(title, line, note); UI.environmentGrid.appendChild(box);
-        }
-        UI.environmentSummary.textContent = AppState.environment.canUseDirectory ? '目录选择器可用：可以继续执行真实文件夹读写测试。' : 'showDirectoryPicker 不可用：该方案无法继续，请不要将本次验证判断为成功。';
-        UI.environmentSummary.className = AppState.environment.canUseDirectory ? 'notice' : 'notice';
-        TestLogger.write('环境检测', AppState.environment.canUseDirectory ? '成功' : '不支持', UI.environmentSummary.textContent);
-        return AppState.environment;
-      }
-    };
-
-    const DirectoryHandleStore = {
-      dbName: 'local-error-review-validation',
-      storeName: 'handles',
-      key: 'selected-directory',
-      open() {
-        return new Promise((resolve, reject) => {
-          try {
-            const request = indexedDB.open(this.dbName, 1);
-            request.onupgradeneeded = () => { try { request.result.createObjectStore(this.storeName); } catch (error) { reject(error); } };
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error || new Error('IndexedDB 打开失败'));
-          } catch (error) { reject(error); }
-        });
-      },
-      async save(handle) {
-        const db = await this.open();
-        return new Promise((resolve, reject) => {
-          try { const tx = db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).put(handle, this.key); tx.oncomplete = () => { db.close(); resolve(); }; tx.onerror = () => { db.close(); reject(tx.error || new Error('目录句柄保存失败')); }; } catch (error) { db.close(); reject(error); }
-        });
-      },
-      async load() {
-        const db = await this.open();
-        return new Promise((resolve, reject) => {
-          try { const tx = db.transaction(this.storeName, 'readonly'); const request = tx.objectStore(this.storeName).get(this.key); request.onsuccess = () => { db.close(); resolve(request.result || null); }; request.onerror = () => { db.close(); reject(request.error || new Error('目录句柄读取失败')); }; } catch (error) { db.close(); reject(error); }
-        });
-      },
-      async clear() {
-        const db = await this.open();
-        return new Promise((resolve, reject) => {
-          try { const tx = db.transaction(this.storeName, 'readwrite'); tx.objectStore(this.storeName).delete(this.key); tx.oncomplete = () => { db.close(); resolve(); }; tx.onerror = () => { db.close(); reject(tx.error || new Error('目录句柄清除失败')); }; } catch (error) { db.close(); reject(error); }
-        });
-      }
-    };
-
-    const PermissionManager = {
-      async query(handle) { return handle.queryPermission({ mode: 'readwrite' }); },
-      async request(handle) { return handle.requestPermission({ mode: 'readwrite' }); },
-      async refreshDisplay() {
-        if (!AppState.directoryHandle) { UI.directoryStatus.textContent = '尚未选择目录。'; UI.request.disabled = true; UI.remove.disabled = true; return 'prompt'; }
-        try { const permission = await this.query(AppState.directoryHandle); UI.directoryStatus.textContent = '文件夹：' + AppState.directoryHandle.name + '；当前权限：' + permission; UI.request.disabled = permission === 'granted'; UI.remove.disabled = permission !== 'granted'; return permission; } catch (error) { TestLogger.error('权限检查', 'queryPermission', error, '重新选择目录或点击重新请求权限。'); return 'denied'; }
-      }
-    };
-
-    const FileSystemTester = {
-      async chooseDirectory() {
-        if (!AppState.environment || !AppState.environment.canUseDirectory) { TestLogger.write('目录选择', '不支持', 'showDirectoryPicker 不可用；本方案无法继续。'); return false; }
-        try { const handle = await window.showDirectoryPicker({ mode: 'readwrite' }); AppState.directoryHandle = handle; await DirectoryHandleStore.save(handle); await PermissionManager.refreshDisplay(); UI.persistedStatus.textContent = '已保存当前目录句柄；IndexedDB 仅保存句柄。'; TestLogger.write('选择目录', '成功', '已选择文件夹：' + handle.name + '，已请求 readwrite 权限。'); return true; }
-        catch (error) { if (error && error.name === 'AbortError') TestLogger.write('选择目录', '已取消', '用户取消了目录选择。'); else TestLogger.error('选择目录', 'showDirectoryPicker', error, '确认用户主动点击，并在 Edge 中授予目录权限。'); return false; }
-      },
-      async writeJson() {
-        const data = { testId: 'local-error-review-validation', createdAt: new Date().toISOString(), protocol: location.protocol, random: this.randomString() };
-        await this.writeText('test-data.json', JSON.stringify(data, null, 2)); return data;
-      },
-      async readJson() { const file = await this.readFile('test-data.json'); const data = JSON.parse(await file.text()); UI.jsonOutput.textContent = JSON.stringify(data, null, 2); return data; },
-      async updateJson(data) { const updated = { ...data, updatedAt: new Date().toISOString(), random: this.randomString() }; await this.writeText('test-data.json', JSON.stringify(updated, null, 2)); return updated; },
-      async writeText(name, content) { const fileHandle = await AppState.directoryHandle.getFileHandle(name, { create: true }); const writable = await fileHandle.createWritable(); try { await writable.write(content); } finally { await writable.close(); } },
-      async readFile(name) { const fileHandle = await AppState.directoryHandle.getFileHandle(name); return fileHandle.getFile(); },
-      randomString() { if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID(); return Math.random().toString(36).slice(2) + Date.now().toString(36); },
-      makeCanvas() { const canvas = document.createElement('canvas'); canvas.width = 640; canvas.height = 360; const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f5f8f5'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#226b4a'; ctx.fillRect(34, 32, 120, 80); ctx.beginPath(); ctx.arc(530, 88, 48, 0, Math.PI * 2); ctx.fillStyle = '#d6954c'; ctx.fill(); ctx.strokeStyle = '#a74f3f'; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(90, 270); ctx.lineTo(550, 190); ctx.stroke(); ctx.fillStyle = '#1d2b24'; ctx.font = 'bold 30px system-ui'; ctx.fillText('本地错题系统测试', 34, 170); ctx.font = '22px system-ui'; ctx.fillText(new Date().toLocaleString('zh-CN'), 34, 320); return canvas; },
-      canvasBlob(canvas, type) { return new Promise((resolve, reject) => { try { canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Canvas 未生成 ' + type + ' Blob')), type); } catch (error) { reject(error); } }); },
-      async imageTest() {
-        const canvas = this.makeCanvas(); let webpError = null;
-        try { const blob = await this.canvasBlob(canvas, 'image/webp'); await this.writeBlob('test-image.webp', blob); const file = await this.readFile('test-image.webp'); await this.displayImage(file, 'WebP'); TestLogger.write('WebP 图片测试', '成功', '真实写入并重新读取 test-image.webp；文件大小：' + file.size + ' 字节。'); return { type: 'webp', file }; }
-        catch (error) { webpError = error; TestLogger.error('WebP 图片测试', '编码、写入或读取 WebP', error, '确认 WebP 编码支持和目录写权限；PNG 对照结果不能替代 WebP 成功。'); }
-        try { const png = await this.canvasBlob(canvas, 'image/png'); await this.writeBlob('test-image.png', png); const file = await this.readFile('test-image.png'); await this.displayImage(file, 'PNG 对照'); TestLogger.write('PNG 对照测试', '警告', 'PNG 对照成功，但这不能等同于 WebP 成功；原始 WebP 异常：' + (webpError.message || webpError)); return { type: 'png', file }; }
-        catch (error) { TestLogger.error('PNG 对照测试', 'PNG 编码、写入或读取', error, '检查 Canvas、Blob 和目录权限。'); return null; }
-      },
-      async writeBlob(name, blob) { const fileHandle = await AppState.directoryHandle.getFileHandle(name, { create: true }); const writable = await fileHandle.createWritable(); try { await writable.write(blob); } finally { await writable.close(); } },
-      displayImage(file, label) { return new Promise((resolve, reject) => { const url = URL.createObjectURL(file); if (AppState.lastImageObjectUrl) { try { URL.revokeObjectURL(AppState.lastImageObjectUrl); } catch (error) { TestLogger.error('图片清理', '撤销旧 Object URL', error, '刷新页面后重试。'); } } AppState.lastImageObjectUrl = url; const image = UI.imagePreview; image.onload = () => { UI.imageMeta.textContent = label + '：文件大小 ' + file.size + ' 字节；图片宽高 ' + image.naturalWidth + '×' + image.naturalHeight + '；MIME 类型 ' + file.type + '。Object URL 已在加载后撤销。'; try { URL.revokeObjectURL(url); } catch (error) { TestLogger.error('图片清理', '撤销 Object URL', error, '刷新页面后重试。'); } AppState.lastImageObjectUrl = null; image.style.display = 'block'; resolve(); }; image.onerror = () => { try { URL.revokeObjectURL(url); } catch (error) { TestLogger.error('图片清理', '撤销失败图片 URL', error, '刷新页面后重试。'); } reject(new Error('Object URL 图片加载失败')); }; image.src = url; }); },
-      async deleteFiles() { if (!AppState.directoryHandle) return; for (const name of ['test-data.json', 'test-image.webp', 'test-image.png']) { try { await AppState.directoryHandle.removeEntry(name); TestLogger.write('删除测试文件', '成功', name + ' 已删除。'); } catch (error) { if (error && error.name === 'NotFoundError') TestLogger.write('删除测试文件', '警告', name + '：文件不存在。'); else TestLogger.error('删除测试文件', name, error, '确认目录权限仍为 granted。'); } } }
-    };
-
-    const App = {
-      async checkStoredHandle() {
-        if (!AppState.environment || !AppState.environment.canUseIndexedDB) { UI.persistedStatus.textContent = 'IndexedDB 不可用，无法持久化目录句柄。'; return; }
-        try { const handle = await DirectoryHandleStore.load(); if (!handle) { UI.persistedStatus.textContent = '未找到已保存目录句柄。'; TestLogger.write('读取已保存句柄', '成功', '未找到已保存句柄。'); return; } AppState.directoryHandle = handle; const permission = await PermissionManager.refreshDisplay(); let accessible = false; if (permission === 'granted') { try { await handle.getFileHandle('test-data.json'); accessible = true; } catch (error) { if (error && error.name === 'NotFoundError') accessible = false; else throw error; } } UI.persistedStatus.textContent = '找到已保存句柄；文件夹：' + handle.name + '；当前权限：' + permission + '；可以重新访问测试文件：' + (accessible ? '是' : '否（文件不存在或尚未授权）') + '。'; TestLogger.write('读取已保存句柄', '成功', UI.persistedStatus.textContent); }
-        catch (error) { UI.persistedStatus.textContent = '读取已保存句柄失败。'; TestLogger.error('读取已保存句柄', 'IndexedDB 或 queryPermission', error, '重新选择原文件夹并重新授权。'); }
-      },
-      setBusy(value) { AppState.busy = value; for (const button of [UI.choose, UI.request, UI.clear, UI.run, UI.remove]) button.disabled = value || (button === UI.request && !AppState.directoryHandle) || (button === UI.remove && !AppState.directoryHandle); UI.run.classList.toggle('loading', value); },
-      async runStep(name, action) { try { const result = await action(); TestLogger.write(name, '成功', '步骤完成。'); return { ok: true, result }; } catch (error) { TestLogger.error(name, name, error, '检查失败步骤提示，并确认目录权限、文件占用和 Edge 设置。'); return { ok: false, error }; } },
-      async runAll() {
-        if (AppState.busy) return; this.setBusy(true); UI.finalResult.textContent = '测试进行中……'; AppState.steps = [];
-        try {
-          const env = await EnvironmentChecker.run(); AppState.steps.push(env.canUseDirectory ? '环境检测成功' : '环境不支持');
-          if (!env.canUseDirectory) { UI.finalResult.textContent = '未通过：showDirectoryPicker 不可用，本方案无法继续。'; return; }
-          if (!AppState.directoryHandle) { TestLogger.write('权限检查', '警告', '尚未选择目录；请先点击“选择测试文件夹”。'); UI.finalResult.textContent = '未完成：请先选择测试文件夹。'; return; }
-          const permission = await PermissionManager.refreshDisplay(); if (permission !== 'granted') { TestLogger.write('权限检查', '失败', '当前权限为 ' + permission + '；请点击“重新请求权限”。'); UI.finalResult.textContent = '未通过：目录没有 readwrite 权限。'; return; }
-          const created = await this.runStep('创建 JSON', () => FileSystemTester.writeJson()); AppState.steps.push(created.ok ? 'JSON 创建成功' : 'JSON 创建失败');
-          if (created.ok) { const read = await this.runStep('读取 JSON', () => FileSystemTester.readJson()); AppState.steps.push(read.ok ? 'JSON 读取成功' : 'JSON 读取失败'); if (read.ok) { const updated = await this.runStep('修改 JSON', () => FileSystemTester.updateJson(read.result)); AppState.steps.push(updated.ok ? 'JSON 修改写入成功' : 'JSON 修改失败'); if (updated.ok) { const verify = await this.runStep('验证 JSON 修改', async () => { const reread = await FileSystemTester.readJson(); if (reread.random !== updated.result.random || reread.updatedAt !== updated.result.updatedAt) throw new Error('重新读取内容与修改后的值不一致'); return reread; }); AppState.steps.push(verify.ok ? 'JSON 修改验证成功' : 'JSON 修改验证失败'); } } }
-          const image = await FileSystemTester.imageTest(); AppState.steps.push(image && image.type === 'webp' ? 'WebP 成功' : 'WebP 未成功');
-          await this.checkStoredHandle(); AppState.steps.push('目录句柄验证完成');
-          const hardFailures = AppState.steps.filter(x => /失败|未成功/.test(x)); UI.finalResult.textContent = hardFailures.length ? '测试完成，但未全部通过：' + hardFailures.join('；') + '。' : '测试完成：环境、JSON、WebP、图片读取和目录句柄流程均通过。';
-        } catch (error) { TestLogger.error('运行全部测试', '总流程', error, '查看日志中的具体步骤，单独重试可继续排查。'); UI.finalResult.textContent = '测试异常终止，但异常已记录在日志中。'; }
-        finally { this.setBusy(false); await PermissionManager.refreshDisplay(); }
-      },
-      async requestPermission() { if (!AppState.directoryHandle) return; try { const state = await PermissionManager.request(AppState.directoryHandle); await PermissionManager.refreshDisplay(); TestLogger.write('重新请求权限', state === 'granted' ? '成功' : '警告', '权限结果：' + state); } catch (error) { if (error && error.name === 'AbortError') TestLogger.write('重新请求权限', '已取消', '用户取消授权。'); else TestLogger.error('重新请求权限', 'requestPermission', error, '请通过按钮主动触发，并在 Edge 权限提示中选择允许。'); } },
-      async clearHandle() { try { await DirectoryHandleStore.clear(); AppState.directoryHandle = null; await PermissionManager.refreshDisplay(); UI.persistedStatus.textContent = '已清除浏览器中保存的目录句柄；本地测试文件未被删除。'; TestLogger.write('清除已保存句柄', '成功', UI.persistedStatus.textContent); } catch (error) { TestLogger.error('清除已保存句柄', 'IndexedDB delete', error, '检查 IndexedDB 是否可用。'); } }
-    };
-
-    UI.choose.addEventListener('click', () => { void FileSystemTester.chooseDirectory(); });
-    UI.request.addEventListener('click', () => { void App.requestPermission(); });
-    UI.clear.addEventListener('click', () => { void App.clearHandle(); });
-    UI.run.addEventListener('click', () => { void App.runAll(); });
-    UI.remove.addEventListener('click', () => { if (AppState.busy) return; if (window.confirm('确定删除 test-data.json 和 test-image.webp 吗？')) void FileSystemTester.deleteFiles(); else TestLogger.write('删除测试文件', '已取消', '用户取消了删除操作。'); });
-    window.addEventListener('unhandledrejection', event => { event.preventDefault(); TestLogger.error('全局异常', '未处理 Promise', event.reason, '查看具体异常后重试；本页面已阻止异常冒泡。'); });
-    window.addEventListener('error', event => { TestLogger.error('全局异常', '脚本运行', event.error || new Error(event.message), '查看日志并重新打开 HTML。'); });
-
-    (async () => { try { await EnvironmentChecker.run(); await App.checkStoredHandle(); } catch (error) { TestLogger.error('页面启动', '初始化', error, '重新打开 HTML，并检查浏览器是否允许 file:// 页面使用 IndexedDB。'); } })();
-  </script>
-</body>
-</html>
+<header class="topbar"><div class="topbar-inner"><a class="brand" href="#" data-route="home" aria-label="错重做首页"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5.5h14M5 10h9M5 14.5h14M5 19h7"/><path d="m16 9 2 2 3-4"/></svg></span><span>错重做</span></a><nav class="desktop-nav" aria-label="主"><button class="nav-link" data-route="home">首页</button><button class="nav-link" data-route="capture">录入错</button><button class="nav-link" data-route="review">始</button><button class="nav-link" data-route="data">数据管理</button></nav><div class="connection"><span class="dot"></span>数据已连?· 朜</div><button class="menu" id="menu" aria-label="打开菜单" aria-expanded="false"></button><nav class="mobile-nav" id="mobileNav" aria-label="移动"><button class="nav-link" data-route="home">首页</button><button class="nav-link" data-route="capture">录入错</button><button class="nav-link" data-route="review">始</button><button class="nav-link" data-route="data">数据管理</button></nav></div></header>
+<main class="page">
+<section class="view" data-view="init"><div class="split init"><div><p class="eyebrow">LOCAL / OFFLINE / PRIVATE</p><h1 class="hero-title">你的错<br>叿存在<em>臷的电脑里</em></h1><p class="lead">选择东地文件夹，用于保存盛片答案图片和复习状应用不会上传数捼也不依赖服务器</p><div class="button-row"><button class="btn primary large" id="chooseDirectory">选择错数据文件?</button><button class="btn secondary" id="reconnectDirectory">重新连接已有题库</button></div><p class="note">当前为界面演?· 不会写入正式题库数据</p></div><div class="status-stack"><article class="status"><span class="status-icon"></span><div><h3>完全离线</h3><p>数据叜你的设理，不经过网络传输</p><strong>朜优先 · 无需登录</strong></div></article><article class="status"><span class="status-icon"></span><div><h3>朜文件?/h3><p>使用浏器的文件系统能力连接你的错文件夹</p><strong>权限由你掌控</strong></div></article><article class="status"><span class="status-icon"></span><div><h3>无服务器</h3><p>即使於网络，习工具仍然可以常使用</p><strong>私人学习空间</strong></div></article></div></div></section>
+<section class="view" data-view="home"><div class="section-head"><div><p class="eyebrow">TODAY'S REVIEW</p><h1 class="section-title">该重新做遍了?/h1><p class="section-subtitle">系统会按照习时间随机抽取错题做题查看答案，然后记录结果</p></div><button class="btn primary" data-route="review">始随机?</button></div><div class="stat-grid"><article class="stat"><div class="stat-label">当前到期</div><div class="stat-value">4</div><div class="stat-meta">道等待复习</div></article><article class="stat"><div class="stat-label">全部错</div><div class="stat-value">1,286</div><div class="stat-meta">持续秴</div></article><article class="stat"><div class="stat-label">朜数据</div><div class="stat-value">6.8<small> GB</small></div><div class="stat-meta">图片与习</div></article><article class="stat"><div class="stat-label">近</div><div class="stat-value">7<small> 天前</small></div><div class="stat-meta">模拟数据</div></article></div><div class="home-grid"><article class="card review-card"><div><p class="eyebrow">FOCUS SESSION</p><h2>把<br>再做扎实点?/h2><p>今天先完?4 道到期错题，保持稳定的习节奏</p></div><button class="btn" data-route="review">进入复习</button></article><article class="card"><h2>数据文件?/h2><div class="folder"><div><strong id="homeFolder">尚未连接正式题库</strong><span>演示连接状?· 叚时更</span></div><span class="badge">仅本</span></div><div class="button-row" style="margin-top:22px"><button class="btn secondary" data-route="data">进入数据管理</button></div></article></div></section>
+<section class="view" data-view="capture"><div class="section-head"><div><p class="eyebrow">CAPTURE A MISTAKE</p><h1 class="section-title">收藏道错?/h1><p class="section-subtitle">点击对应区域后按 Ctrl + V 粘贴戛。盒答分别攌 1? 张图片</p></div><span class="badge">界面演示</span></div><div class="capture-grid"><article class="card capture-panel"><h2>题目图片 <span class="count" id="qCount">0 / 5</span></h2><div class="paste" id="qPaste" tabindex="0" role="button" aria-label="题目图片粘贴区域"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 15l2.5-3 2 2 1.5-2 2 3M9 9h.01"/></svg><strong>点击此，然后按 Ctrl + V</strong><span>攌 PNG、JPEG ?WebP · 模拟预</span></div><div class="previews" id="qPreviews"></div></article><article class="card capture-panel"><h2>答图片 <span class="count" id="aCount">0 / 5</span></h2><div class="paste" id="aPaste" tabindex="0" role="button" aria-label="答图片粘贴区域"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h3"/></svg><strong>点击此，然后按 Ctrl + V</strong><span>答解析叻单独保存 · 模拟预</span></div><div class="previews" id="aPreviews"></div></article></div><div class="capture-footer"><span>题目 0 ?· 答 0 ?· 演示数据</span><div class="button-row" style="margin-top:0"><button class="btn secondary" data-route="home">取消</button><button class="btn primary" id="save" disabled>保存错</button></div></div></section>
+<section class="view" data-view="review"><div class="review-wrap"><div class="review-top"><div><p class="eyebrow">随机复习</p><span class="review-progress">已完?<strong id="done">6</strong> </span></div><button class="btn ghost" data-route="home">结束复习</button></div><article class="card question-card"><div class="question-image" role="button" tabindex="0" aria-label="题目图片 1，点击查看大" id="questionImage"> </div><button class="btn brand-btn" id="showAnswer">查看答</button><div class="answer" id="answer"><div class="answer-image">答图片 · 模拟展示</div><div class="answer-actions"><button class="btn primary" id="wrong">答错</button><button class="btn brand-btn" id="right">答</button><button class="btn secondary" id="hide">不再展示</button></div></div></article></div></section>
+<section class="view" data-view="data"><div class="section-head"><div><p class="eyebrow">LOCAL STORAGE</p><h1 class="section-title">数据与?/h1><p class="section-subtitle">题目图片和习数捰保存在当前电脑的数据文件夹中</p></div><span class="badge">模拟数据</span></div><div class="data-grid"><article class="card data-card data-overview"><h2>数据概</h2><div class="stat-grid" style="margin-top:22px"><div><div class="stat-label">错总数</div><div class="big">1,286</div></div><div><div class="stat-label">参与复习</div><div class="big">842</div></div><div><div class="stat-label">不再展示</div><div class="big">128</div></div><div><div class="stat-label">图片数量</div><div class="big">3,864</div></div></div></article><article class="card data-card folder-card"><h3>当前文件?/h3><div class="folder"><div><strong id="dataFolder">尚未连接正式题库</strong><span>读写权限由浏览器授予</span></div><span class="badge">朆</span></div><div class="progress"><span></span></div><div class="data-actions"><button class="btn secondary" id="authorize">重新授权</button><button class="btn secondary" id="change">更换文件</button></div></article><article class="card data-card"><h3>数据状?/h3><div class="big">6.8<small> GB</small></div><span class="stat-meta">近份：7 天前 · 模拟数据</span><div class="data-actions"><button class="btn brand-btn" id="backup">备份到其他文件夹</button></div></article><article class="card data-card"><h3>覆盖恢</h3><p class="stat-meta">从份恢复会覆盖当前全部数据。阶叼示确认流程</p><button class="btn danger" id="restore">从份盖恢</button></article></div></section>
+</main>
+<div class="toast-region" id="toasts" aria-live="polite"></div><div class="backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">操作</h2><p id="modalText"></p><label class="checkline" id="checkWrap" hidden><input type="checkbox" id="check">我理解当前数捰</label><div class="modal-actions"><button class="btn secondary" id="cancel">取消</button><button class="btn primary" id="confirm"></button></div></div></div><div class="backdrop viewer" id="viewerBackdrop"><div class="modal" role="dialog" aria-modal="true"><h2>图片查看?/h2><div class="viewer-image" id="viewerImage">题目图片 1 · 模拟大图</div><div class="modal-actions"><button class="btn secondary" id="prev">上一</button><button class="btn ghost" id="closeViewer">关闭</button><button class="btn secondary" id="next">下一</button></div></div></div>
+<script>'use strict';
+const DEV_MODE=false;
+const AppState={view:'init',question:[],answer:[],done:6,lastTrigger:null};
+const MockDataProvider={overview(){return{due:4,total:1286,localSize:'6.8 GB',lastBackup:'7 days ago',isDemo:true}},review(){return{questionImages:['question image 1'],answerImages:['answer image'],isDemo:true}}};
+const $=id=>document.getElementById(id);
+const ToastManager={show(text,type='success'){const el=document.createElement('div');el.className='toast '+(type==='warning'?'warning':type==='error'?'error':'');el.textContent=text; $('toasts').append(el); window.setTimeout(()=>el.remove(),3200)}};
+const Router={go(view){AppState.view=view;document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.dataset.view===view));document.querySelectorAll('[data-route]').forEach(el=>{const active=el.dataset.route===view;el.classList.toggle('active',active);if(el.tagName==='BUTTON')el.setAttribute('aria-current',active?'page':'false')});$('mobileNav').classList.remove('open');$('menu').setAttribute('aria-expanded','false');window.scrollTo({top:0,behavior:'smooth'})}};
+const DialogManager={open({title,text,check=false,onConfirm}){AppState.lastTrigger=document.activeElement;$('modalTitle').textContent=title;$('modalText').textContent=text;$('checkWrap').hidden=!check;$('check').checked=false;$('confirm').disabled=check;$('modalBackdrop').classList.add('open');$('confirm').onclick=()=>{this.close();onConfirm?.()};setTimeout(()=>$('confirm').focus(),0)},close(){$('modalBackdrop').classList.remove('open');AppState.lastTrigger?.focus()}};
+const Viewer={open(text){$('viewerImage').textContent=text+' - simulated large view';$('viewerBackdrop').classList.add('open');$('closeViewer').focus()},close(){$('viewerBackdrop').classList.remove('open')}};
+function connectDemo(){ToastManager.show('Local folder connected (demo only; no formal data written)');$('homeFolder').textContent='My error-review folder';$('dataFolder').textContent='My error-review folder';Router.go(AppState.view==='init'?'home':'data')}
+function addImage(kind){const list=AppState[kind];if(list.length>=5)return ToastManager.show('Up to 5 images are supported','warning');list.push((kind==='question'?'Question image ':'Answer image ')+(list.length+1));renderImages(kind);ToastManager.show('A simulated image preview was added')}
+function renderImages(kind){const list=AppState[kind],wrap=$(kind==='question'?'qPreviews':'aPreviews');wrap.replaceChildren();list.forEach((name,i)=>{const row=document.createElement('div');row.className='preview';const thumb=document.createElement('div');thumb.className='thumb';thumb.textContent='IMAGE';const info=document.createElement('div');info.className='preview-info';const strong=document.createElement('strong');strong.textContent=name;const meta=document.createElement('span');meta.textContent='Simulated size 1280 x 720 - preview';info.append(strong,meta);const actions=document.createElement('div');actions.className='preview-actions';[['up',i===0],['down',i===list.length-1],['remove',false]].forEach(([label,disabled],action)=>{const b=document.createElement('button');b.type='button';b.textContent=action===0?'^':action===1?'v':'x';b.disabled=disabled;b.setAttribute('aria-label',label);b.onclick=()=>{if(action===2)list.splice(i,1);else{const n=action===0?i-1:i+1;[list[i],list[n]]=[list[n],list[i]]}renderImages(kind)};actions.append(b)});row.append(thumb,info,actions);wrap.append(row)});$(kind==='question'?'qCount':'aCount').textContent=list.length+' / 5';$('save').disabled=!AppState.question.length&&!AppState.answer.length}
+function bindPaste(id,kind){const zone=$(id);zone.addEventListener('click',()=>zone.classList.add('focused'));zone.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();addImage(kind)}});zone.addEventListener('paste',e=>{e.preventDefault();addImage(kind)})}
+function complete(message){AppState.done++;$('done').textContent=AppState.done;ToastManager.show(message);$('answer').classList.remove('open');$('showAnswer').disabled=false}
+document.addEventListener('click',e=>{const route=e.target.closest('[data-route]')?.dataset.route;if(route){e.preventDefault();Router.go(route)}});$('menu').addEventListener('click',()=>{const open=!$('mobileNav').classList.contains('open');$('mobileNav').classList.toggle('open',open);$('menu').setAttribute('aria-expanded',String(open))});
+bindPaste('qPaste','question');bindPaste('aPaste','answer');['chooseDirectory','reconnectDirectory','authorize','change'].forEach(id=>$(id).addEventListener('click',connectDemo));
+$('save').addEventListener('click',()=>{if($('save').disabled)return;$('save').disabled=true;$('save').textContent='Saving...';setTimeout(()=>{ToastManager.show('Saved (demo only; no formal database write)');$('save').textContent='Save question';Router.go('home')},700)});$('showAnswer').addEventListener('click',()=>{$('answer').classList.add('open');$('showAnswer').disabled=true});$('right').addEventListener('click',()=>complete('Correct - great work'));$('wrong').addEventListener('click',()=>{ToastManager.show('Marked wrong (demo)','warning');complete('Wrong answer recorded')});$('hide').addEventListener('click',()=>complete('This question will no longer be shown'));
+$('questionImage').addEventListener('click',()=>Viewer.open('Question image 1'));$('restore').addEventListener('click',()=>DialogManager.open({title:'Restore over current data',text:'This will overwrite all current data and cannot be undone.',check:true,onConfirm:()=>ToastManager.show('Restore confirmed (demo only)','warning')}));$('backup').addEventListener('click',()=>DialogManager.open({title:'Backup to another folder',text:'A local folder picker would open. This is a UI demo and copies no real data.',onConfirm:()=>ToastManager.show('Backup flow completed (demo)')}));
+$('check').addEventListener('change',e=>$('confirm').disabled=!e.target.checked);$('cancel').addEventListener('click',()=>DialogManager.close());$('modalBackdrop').addEventListener('click',e=>{if(e.target.id==='modalBackdrop')DialogManager.close()});$('closeViewer').addEventListener('click',()=>Viewer.close());$('prev').addEventListener('click',()=>ToastManager.show('Already at the first image','warning'));$('next').addEventListener('click',()=>ToastManager.show('Already at the last image','warning'));window.addEventListener('keydown',e=>{if(e.key==='Escape'){DialogManager.close();Viewer.close()}});const EnvironmentChecker={run:async()=>({protocol:location.protocol,secure:window.isSecureContext,canUseDirectory:typeof window.showDirectoryPicker==='function',canUseIndexedDB:'indexedDB' in window})}; const DirectoryHandleStore={load:async()=>null,save:async()=>undefined,clear:async()=>undefined}; const FileSystemTester={writeJson:async()=>({demo:true}),readJson:async()=>({demo:true}),imageTest:async()=>({demo:true})}; Router.go('init');</script></body></html>
