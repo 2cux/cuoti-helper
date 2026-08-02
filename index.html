@@ -135,7 +135,7 @@
     */
     'use strict';
     const $=id=>document.getElementById(id),now=()=>Date.now(),APP_ID='local-mistake-review',DATA_VERSION=1;
-      const AppState={view:'initialization',connectionStatus:'disconnected',question:[],answer:[],repository:null,qr:null,reviewSession:null,activePasteTarget:null,queue:[],processing:false,saving:false,dirty:false,urls:new Set(),activeTask:null,taskCancel:false};window.AppState=AppState;
+     const AppState={view:'initialization',connectionStatus:'disconnected',connectionAttemptId:0,hasBootstrapped:false,question:[],answer:[],repository:null,qr:null,reviewSession:null,activePasteTarget:null,queue:[],processing:false,saving:false,dirty:false,urls:new Set(),activeTask:null,taskCancel:false};window.AppState=AppState;
     const Toast={show(t,type='success'){const e=document.createElement('div');e.className='toast '+type;e.textContent=t;$('toasts').append(e);setTimeout(()=>e.remove(),3800)}};
     const fail=(name,message)=>Object.assign(new Error(message),{name});
     const formatBytes=n=>{if(!Number.isFinite(n)||n<0)return '0 B';if(n<1024)return `${n} B`;const u=['KB','MB','GB','TB'];let i=-1,v=n;do{v/=1024;i++}while(v>=1024&&i<u.length-1);return `${v.toFixed(v>=100||i===0?0:1)} ${u[i]}`};
@@ -157,7 +157,7 @@
       const AppRouter={navigate(view){route(view)}};
      function setConnectionStatus(status){AppState.connectionStatus=status;const connected=status==='connected';document.querySelectorAll('[data-route="home"],[data-route="capture"],[data-route="review"],[data-route="data"]').forEach(x=>{x.hidden=!connected;x.disabled=!connected});const labels={disconnected:'本地离线运行 · 尚未连接题库',connecting:'本地离线运行 · 正在连接题库',connected:'本地离线运行 · 数据已连接','permission-denied':'本地离线运行 · 文件夹权限被拒绝',error:'本地离线运行 · 连接失败，请检查文件夹后重试'};const el=$('connection');el.className='connection '+status;el.querySelector('.label').textContent=labels[status]||labels.error;Router.sync()}
       function route(v){if(!VIEW_RENDERERS[v])return;if(AppState.connectionStatus==='connected'||v==='initialization'||v==='home'){AppState.view=v;VIEW_RENDERERS[v]();Router.sync()}}
-     async function connect(){try{setConnectionStatus('connecting');const h=await FS.pick();let r=new Repo(h);const names=[];for await(const x of h.values())names.push(x.name);if(names.length===0)await r.initialize();else{const allowed=['app.json','questions-a.json','questions-b.json','images','recovery'];const unknown=names.filter(n=>!allowed.includes(n));if(unknown.length)throw fail('InvalidFolderError','文件夹包含未知内容，未覆盖任何数据；请选择题库文件夹或空文件夹');r=await r.load()}AppState.repository=r;AppState.qr=new QuestionRepository(r);setConnectionStatus('connected');route('home');renderData();window.refreshRealStats?.();Toast.show('本地题库已连接')}catch(e){if(e.name!=='AbortError'){setConnectionStatus(e.name==='NotAllowedError'?'permission-denied':'error');Toast.show(`连接失败：${e.name||'未知错误'}。${e.message||'请检查文件夹权限后重试'}`,'error')}else setConnectionStatus('disconnected')}}
+     async function connect(){const attemptId=++AppState.connectionAttemptId;try{setConnectionStatus('connecting','connection-start',null,attemptId);const h=await FS.pick();let r=new Repo(h);const names=[];for await(const x of h.values())names.push(x.name);if(names.length===0)await r.initialize();else{const allowed=['app.json','questions-a.json','questions-b.json','images','recovery'];const unknown=names.filter(n=>!allowed.includes(n));if(unknown.length)throw fail('InvalidFolderError','文件夹包含未知内容，未覆盖任何数据；请选择题库文件夹或空文件夹');r=await r.load()}if(attemptId!==AppState.connectionAttemptId)return;AppState.repository=r;AppState.qr=new QuestionRepository(r);setConnectionStatus('connected','library-loaded',null,attemptId);route('home');renderData();window.refreshRealStats?.();Toast.show('本地题库已连接')}catch(e){if(attemptId!==AppState.connectionAttemptId)return;if(e.name!=='AbortError'){setConnectionStatus(e.name==='NotAllowedError'?'permission-denied':'error',e.name==='NotAllowedError'?'permission-denied':'library-load-failed',e,attemptId);Toast.show(`连接失败：${e.name||'未知错误'}。${e.message||'请检查文件夹权限后重试'}`,'error')}else setConnectionStatus('disconnected','connection-cancelled',e,attemptId)}}
     const Processor={async run(file){if(!/^image\/(png|jpeg|webp)$/.test(file.type))throw fail('UnsupportedImageError','仅支持 PNG、JPEG、WebP');const b=await createImageBitmap(file),s=Math.min(1,2200/Math.max(b.width,b.height),Math.sqrt(4000000/(b.width*b.height))),w=Math.max(1,Math.floor(b.width*s)),h=Math.max(1,Math.floor(b.height*s)),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');if(!x)throw fail('CanvasError','无法创建 Canvas');x.drawImage(b,0,0,w,h);b.close?.();const mime='image/webp',blob=await new Promise(r=>c.toBlob(r,mime,.9));if(!blob)throw fail('EncodeError','图片编码失败');const url=URL.createObjectURL(blob);AppState.urls.add(url);return{sourceName:file.name||'clipboard-image',blob,previewUrl:url,width:w,height:h,byteSize:blob.size,mimeType:mime,extension:'webp'}}};
     function render(){['question','answer'].forEach(k=>{const p=k[0],a=AppState[k];$(p+'Count').textContent=`${a.length} / 5`;const wrap=$(p+'Previews');wrap.replaceChildren();a.forEach((im,i)=>{const row=document.createElement('div');row.className='preview';const pic=document.createElement('img');pic.className='thumb';pic.src=im.previewUrl;pic.alt=im.sourceName;const info=document.createElement('div');info.className='preview-info';const title=document.createElement('strong');title.textContent=im.sourceName;const meta=document.createElement('span');meta.textContent=`${im.width} x ${im.height} · ${formatBytes(im.byteSize)} · ${im.extension.toUpperCase()}`;info.append(title,meta);const acts=document.createElement('div');acts.className='preview-actions';[['↑',-1],['↓',1],['×',0]].forEach(([label,d])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=(d<0&&i===0)||(d>0&&i===a.length-1);b.onclick=()=>{if(!d){URL.revokeObjectURL(im.previewUrl);AppState.urls.delete(im.previewUrl);a.splice(i,1)}else[a[i],a[i+d]]=[a[i+d],a[i]];AppState.dirty=true;render()};acts.append(b)});row.append(pic,info,acts);wrap.append(row)})});$('save').disabled=AppState.processing||AppState.saving||!AppState.question.length||!AppState.answer.length}
     async function drain(){if(AppState.processing)return;AppState.processing=true;render();while(AppState.queue.length){const t=AppState.queue.shift();try{AppState[t.kind].push(await Processor.run(t.file));AppState.dirty=true}catch(e){Toast.show(`${e.name}: ${e.message}`,'error')}render();await yieldToMain()}AppState.processing=false;render()}
@@ -236,6 +236,7 @@
          window.renderHomeDashboard?.();
          window.renderUnconnectedHome?.();
        }
+       const refreshHomeDashboardFromMemory=refreshHomeDashboardData;
        function renderHomeFromCurrentState(){
          window.renderHomeDashboard?.();
          window.renderUnconnectedHome?.();
@@ -246,7 +247,7 @@
          releaseCurrentQuestionResources();
          resetReviewState();
          AppRouter.navigate('home');
-         await refreshHomeDashboardData();
+         await refreshHomeDashboardFromMemory();
          renderHomeFromCurrentState();
        };
        function openReviewConnectionDialog(){
@@ -611,10 +612,12 @@
         change.onclick = () => { DialogManager.close(); choose.click(); }; focusDialog();
       };
       async function connectLastLibrary() {
+        const attemptId = ++AppState.connectionAttemptId;
         const handle = state.handle, name = state.name || handle?.name || '上次题库';
         const confirm = document.getElementById('confirm');
         button.disabled = true; confirm.disabled = true; confirm.setAttribute('aria-busy', 'true'); confirm.textContent = '正在连接…'; set('connecting');
         try {
+          setConnectionStatus('connecting', 'connection-start', null, attemptId);
           const permission = await handle.queryPermission({ mode: 'readwrite' });
           if (permission === 'prompt') {
             const requested = await handle.requestPermission({ mode: 'readwrite' });
@@ -626,10 +629,12 @@
           AppState.repository = repo; AppState.qr = new QuestionRepository(repo);
           await DirectoryHandleStore.saveLastLibrary(handle);
           AppState.lastConnectedAt = state.lastOpenedAt;
-          set('connected'); route('home'); renderData?.(); window.refreshRealStats?.(); Toast.show('本地题库已连接');
+          if (attemptId !== AppState.connectionAttemptId) return;
+          setConnectionStatus('connected', 'library-loaded', null, attemptId); route('home'); renderData?.(); window.refreshRealStats?.(); Toast.show('本地题库已连接');
           updateButton();
         } catch (error) {
-          set(error.name === 'NotAllowedError' ? 'permission-denied' : 'error'); state.permission = error.name === 'NotAllowedError' ? 'denied' : 'unknown'; window.__lastLibraryError = error.message || error.name; renderDiagnostics(); showFailure(name, error);
+          if (attemptId !== AppState.connectionAttemptId) return;
+          setConnectionStatus(error.name === 'NotAllowedError' ? 'permission-denied' : 'error', error.name === 'NotAllowedError' ? 'write-permission-denied' : 'library-load-failed', error, attemptId); state.permission = error.name === 'NotAllowedError' ? 'denied' : 'unknown'; window.__lastLibraryError = error.message || error.name; renderDiagnostics(); showFailure(name, error);
         } finally {
           confirm.removeAttribute('aria-busy'); confirm.disabled = false; button.disabled = state.loadState !== 'available';
           if (!document.getElementById('chooseAnotherFolder')) confirm.textContent = '进入上次题库';
@@ -760,6 +765,52 @@
       };
       window.renderUnconnectedHome = renderUnconnectedHome;
       renderUnconnectedHome();
+    })();
+  </script>
+  <script>
+    (() => {
+      const state = window.AppState;
+      if (!state) return;
+      state.connectionAttemptId = Number.isInteger(state.connectionAttemptId) ? state.connectionAttemptId : 0;
+      state.hasBootstrapped = true;
+      const baseConnectionStatus = setConnectionStatus;
+      const logConnection = (from, to, reason, attemptId) => {
+        if (!window.DEV_MODE && !window.AppState?.debugConnection) return;
+        console.debug('[connection-status]', { from, to, reason, attemptId, currentView: state.view, hasRepository: !!state.repository, questionCount: state.qr?.all?.().length ?? 0 });
+      };
+      setConnectionStatus = function(status, reason = 'unspecified', error = null, attemptId = null) {
+        if (attemptId !== null && attemptId !== state.connectionAttemptId) {
+          logConnection(state.connectionStatus, state.connectionStatus, 'stale-connect-result-ignored', attemptId);
+          return false;
+        }
+        const previous = state.connectionStatus;
+        baseConnectionStatus(status);
+        logConnection(previous, status, reason, attemptId);
+        if (error && state.debugConnection) console.debug('[connection-error]', { reason, attemptId, name: error.name, message: error.message });
+        return true;
+      };
+      window.LibraryConnectionManager = {
+        begin(reason = 'connection-start') {
+          const attemptId = ++state.connectionAttemptId;
+          setConnectionStatus('connecting', reason, null, attemptId);
+          return attemptId;
+        },
+        isCurrent(attemptId) { return attemptId === state.connectionAttemptId; },
+        succeed(attemptId, reason = 'library-loaded') { return setConnectionStatus('connected', reason, null, attemptId); },
+        fail(attemptId, error, reason = 'library-load-failed') {
+          if (attemptId !== state.connectionAttemptId) return false;
+          return setConnectionStatus(error?.name === 'NotAllowedError' ? 'permission-denied' : 'error', reason, error, attemptId);
+        }
+      };
+      window.refreshHomeDashboardFromMemory = window.refreshHomeDashboardFromMemory || (() => {
+        window.renderHomeDashboard?.();
+        window.renderUnconnectedHome?.();
+      });
+      window.bootstrapApp = window.bootstrapApp || (async init => {
+        if (state.hasBootstrapped) return;
+        state.hasBootstrapped = true;
+        return init?.();
+      });
     })();
   </script>
 </html>
