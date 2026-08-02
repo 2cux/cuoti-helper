@@ -1,0 +1,59 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+
+const html = fs.readFileSync(require('node:path').join(__dirname, '..', 'index.html'), 'utf8');
+const source = html.match(/\/\* REVIEW_ENGINE_START \*\/(.*?)\/\* REVIEW_ENGINE_END \*\//s)[1];
+const ReviewEngine = Function(`${source}; return ReviewEngine;`)();
+const day = 86400000;
+const base = {id:'q',questionImages:[{fileName:'q.webp'}],answerImages:[{fileName:'a.webp'}],hidden:false,nextReviewAt:1000,lastReviewedAt:1000,correctStreak:0,lastResult:null};
+
+test('correct intervals are 1, 3, 7, 14, 30 days and stay capped', () => {
+  for (let streak = 0; streak <= 6; streak++) {
+    const q = {...base, correctStreak:streak};
+    const patch = ReviewEngine.applyResult(q, 'correct', 1000);
+    assert.equal(patch.nextReviewAt, 1000 + [1,3,7,14,30][Math.min(streak,4)] * day);
+  }
+});
+
+test('wrong resets streak and schedules 24 hours later', () => {
+  const patch = ReviewEngine.applyResult({...base,correctStreak:4}, 'wrong', 5000);
+  assert.deepEqual(patch, {correctStreak:0,lastResult:'wrong',lastReviewedAt:5000,nextReviewAt:5000+day});
+});
+
+test('hidden, future, malformed and seen questions are excluded', () => {
+  const now = 100000;
+  const candidates = ReviewEngine.dueQuestions([
+    {...base,id:'ok',nextReviewAt:now}, {...base,id:'hidden',hidden:true,nextReviewAt:now},
+    {...base,id:'future',nextReviewAt:now+1}, {...base,id:'no-q',questionImages:[]},
+    {...base,id:'no-a',answerImages:[]}, {...base,id:'bad-time',nextReviewAt:NaN}
+  ], new Set(['ok']), now);
+  assert.deepEqual(candidates, []);
+});
+
+test('new, wrong and more overdue questions receive higher bounded weights', () => {
+  const now = 31 * day;
+  const fresh = {...base,lastReviewedAt:null,nextReviewAt:now};
+  const wrong = {...base,lastResult:'wrong',nextReviewAt:now-day};
+  const older = {...base,nextReviewAt:now-20*day};
+  assert.ok(ReviewEngine.weight(fresh, now) > 1);
+  assert.ok(ReviewEngine.weight(wrong, now) > ReviewEngine.weight({...base,nextReviewAt:now}, now));
+  assert.ok(ReviewEngine.weight(older, now) > ReviewEngine.weight({...base,nextReviewAt:now-day}, now));
+  assert.ok(ReviewEngine.weight({...base,nextReviewAt:now-1000*day}, now) <= 12);
+});
+
+test('weighted picker handles empty input and deterministic boundaries', () => {
+  assert.equal(ReviewEngine.pickWeighted([], () => 0), null);
+  const items = [{...base,id:'a'},{...base,id:'b'}];
+  assert.equal(ReviewEngine.pickWeighted(items, () => 0, 1000).id, 'a');
+  assert.equal(ReviewEngine.pickWeighted(items, () => 0.999999, 1000).id, 'b');
+});
+
+test('session next marks each selected id once', () => {
+  const repository = {current:{revision:1,questions:[{...base,id:'a',nextReviewAt:0},{...base,id:'b',nextReviewAt:0} ]}};
+  const session = {revision:1,seenIds:new Set(),done:0,currentId:null,completed:false};
+  const first = ReviewEngine.next(repository, session, 100, () => 0);
+  const second = ReviewEngine.next(repository, session, 100, () => 0);
+  assert.notEqual(first.id, second.id);
+  assert.equal(ReviewEngine.next(repository, session, 100, () => 0), null);
+});
