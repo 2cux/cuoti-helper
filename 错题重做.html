@@ -19,11 +19,6 @@
     @media(min-width:1025px){.capture-grid{grid-template-columns:1fr 1fr}.page{padding-top:72px}}@media(min-width:768px) and (max-width:1024px){.topbar-inner,.page{width:calc(100% - 56px)}.capture-grid{grid-template-columns:1fr}.desktop-nav{gap:0}.nav-link{padding:0 8px}.connection .label{max-width:180px;overflow:hidden;text-overflow:ellipsis}}@media(max-width:767px){.topbar-inner,.page{width:calc(100% - 36px)}.page{padding-top:48px}.home-grid,.capture-grid,.data-grid,.stat-grid{grid-template-columns:1fr}.button-row,.answer-actions{width:100%}.button-row .btn,.answer-actions .btn{flex:1}.question-image,.answer-image{max-height:60vh}.modal-actions{flex-wrap:wrap}.modal-actions .btn{flex:1}.review-top{align-items:flex-start}.folder{align-items:flex-start;flex-wrap:wrap}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.btn:hover:not(:disabled){transform:none}}
   </style>
-  <style>
-    .data-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.data-overview .stat-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.data-card{padding:28px}.task-panel{grid-column:1/-1;padding:20px 28px;background:var(--soft);box-shadow:none}.task-panel[hidden]{display:none}.task-head{display:flex;justify-content:space-between;gap:14px;align-items:center}.task-progress{height:8px;background:rgba(17,21,20,.1);border-radius:99px;overflow:hidden;margin-top:14px}.task-progress span{display:block;height:100%;width:0;background:var(--brand);border-radius:inherit}.task-meta{margin:10px 0 0;color:var(--muted);font-size:13px}.permission-line{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-top:16px}.permission-line .badge{margin-left:auto}.choice-list{display:grid;gap:12px;margin-top:18px}.choice-list .btn{justify-content:flex-start;text-align:left;white-space:normal;height:auto;min-height:56px;padding:14px 18px}.choice-list small{display:block;color:var(--muted);font-weight:400;line-height:1.45}.modal-actions .btn[hidden]{display:none}
-    @media(max-width:900px){.data-overview .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-    @media(max-width:767px){.data-grid{grid-template-columns:1fr}.data-overview .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.task-head{align-items:flex-start;flex-direction:column}.task-head .btn{width:100%}}
-  </style>
 </head>
 <body>
   <header class="topbar">
@@ -36,28 +31,28 @@
     </div>
   </header>
   <main class="page">
-    <section class="view" data-view="initialization">
-      <div class="init-layout"><div><p class="eyebrow">LOCAL / OFFLINE / PRIVATE</p><h1 class="hero-title"><span>你的错题，</span><span>只存在<span class="accent">自己的电脑里</span>。</span></h1><p class="lead">选择一个本地文件夹，用于保存题目图片、答案图片和复习状态。<br>应用不会上传任何数据，也不依赖服务器。</p><div class="button-row"><button class="btn primary large" id="chooseDirectory" type="button">选择错题数据文件夹</button><button class="btn secondary large" id="reconnectDirectory" type="button">重新连接已有题库</button></div><p class="note">数据只会写入你选择的本地文件夹。</p></div><div class="status-stack"><article class="status"><span class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.3 7 10 4.1-1.7 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><div><h3>完全离线</h3><p>数据不会通过网络传输</p><strong>无需登录</strong></div></article><article class="status"><span class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7.5h7l2 2h9v9.5H3z"/><path d="M3 7.5V5h7l2 2.5"/></svg></span><div><h3>本地文件夹</h3><p>题目和答案保存在你选择的文件夹中</p><strong>权限由你控制</strong></div></article><article class="status"><span class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M7 8h10"/></svg></span><div><h3>无服务器</h3><p>即使没有网络，也可以正常录入和复习</p><strong>私人学习空间</strong></div></article></div></div>
+    <section class="view" data-view="init">
+      <div class="init-layout"><div><p class="eyebrow">LOCAL / OFFLINE / PRIVATE</p><h1 class="hero-title"><span>你的错题，</span><span>只存在<span class="accent">自己的电脑里</span>。</span></h1><p class="lead">选择一个本地文件夹，用于保存题目图片、答案图片和复习状态。<br>应用不会上传任何数据，也不依赖服务器。</p><div class="button-row"><button class="btn primary large" id="chooseDirectory" type="button">选择错题数据文件夹</button><button class="btn secondary large" id="reconnectDirectory" type="button">重新连接已有题库</button></div><p class="note">当前为界面演示，尚未写入正式题库数据。</p></div><div class="status-stack"><article class="status"><span class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.3 7 10 4.1-1.7 7-5.4 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><div><h3>完全离线</h3><p>数据不会通过网络传输</p><strong>无需登录</strong></div></article><article class="status"><span class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 7.5h7l2 2h9v9.5H3z"/><path d="M3 7.5V5h7l2 2.5"/></svg></span><div><h3>本地文件夹</h3><p>题目和答案保存在你选择的文件夹中</p><strong>权限由你控制</strong></div></article><article class="status"><span class="status-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M7 8h10"/></svg></span><div><h3>无服务器</h3><p>即使没有网络，也可以正常录入和复习</p><strong>私人学习空间</strong></div></article></div></div>
     </section>
-    <section class="view" data-view="home"><div class="section-head"><div><p class="eyebrow">TODAY'S REVIEW</p><h1 class="section-title" id="homeHeadline">连接题库后查看复习</h1><p class="section-subtitle" id="homeSummary">请先连接题库。</p></div><button class="btn primary" data-route="review" type="button">开始复习</button></div><div class="stat-grid"><article class="stat"><div class="stat-label">当前到期</div><div class="stat-value" id="homeDue">—</div><div class="stat-meta">道等待复习</div></article><article class="stat"><div class="stat-label">全部错题</div><div class="stat-value" id="homeTotal">—</div><div class="stat-meta">持续积累</div></article><article class="stat"><div class="stat-label">本地数据</div><div class="stat-value" id="homeBytes">—</div><div class="stat-meta">已登记图片元数据</div></article><article class="stat"><div class="stat-label">最近连接</div><div class="stat-value" id="homeConnected">未连接</div><div class="stat-meta" id="homeBackup">尚未备份</div></article></div><div class="home-grid"><article class="card review-card"><div><p class="eyebrow">FOCUS SESSION</p><h2>把错题，<br>再做扎实</h2><p id="focusSummary">连接题库后开始复习。</p></div><button class="btn" data-route="review" type="button">进入复习</button></article><article class="card"><h2>数据文件夹</h2><div class="folder"><div><strong id="homeFolder">尚未连接题库</strong><span id="homeConnectionHint">请先连接题库</span></div><span class="badge">仅本地</span></div><div class="button-row" style="margin-top:22px"><button class="btn secondary" data-route="data" type="button">进入数据管理</button></div></article></div></section>
-    <section class="view" data-view="capture"><div class="section-head"><div><p class="eyebrow">CAPTURE A MISTAKE</p><h1 class="section-title">收集错题</h1><p class="section-subtitle">点击对应区域后按 Ctrl + V 粘贴截图。题图和答图分别放入对应区域。</p></div><span class="badge">本地录入</span></div><div class="capture-grid"><article class="card capture-panel"><h2>题目图片 <span class="count" id="qCount">0 / 5</span></h2><div class="paste" id="qPaste" tabindex="0" role="button" aria-label="题目图片粘贴区" aria-pressed="false"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 15l2.5-3 2 2 1.5-2 2 3M9 9h.01"/></svg><strong>点击此处，然后按 Ctrl + V</strong><span>支持 PNG、JPEG、WebP；最多 5 张</span></div><div class="previews" id="qPreviews"></div></article><article class="card capture-panel"><h2>答案图片 <span class="count" id="aCount">0 / 5</span></h2><div class="paste" id="aPaste" tabindex="0" role="button" aria-label="答案图片粘贴区" aria-pressed="false"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h3"/></svg><strong>点击此处，然后按 Ctrl + V</strong><span>答案解析将单独保存；最多 5 张</span></div><div class="previews" id="aPreviews"></div></article></div><div class="capture-footer"><span>尚未录入图片</span><div class="button-row" style="margin-top:0"><button class="btn secondary" data-route="home" type="button">取消</button><button class="btn primary" id="save" type="button" disabled>保存错题</button></div></div></section>
-    <section class="view" data-view="review"><div class="review-wrap"><div class="review-top"><div><p class="eyebrow">随机复习</p><span class="review-progress">本次已完成 <strong id="done">0</strong> 道</span></div><button class="btn ghost" data-route="home" type="button">结束复习</button></div><article class="card question-card"><div class="question-image" role="button" tabindex="0" aria-label="题目图片" id="questionImage"></div><button class="btn brand-btn" id="showAnswer" type="button">查看答案</button><div class="answer" id="answer"><div class="answer-image" id="answerImage"></div><div class="answer-actions"><button class="btn primary" id="wrong" type="button">答错</button><button class="btn brand-btn" id="right" type="button">答对</button><button class="btn secondary" id="hide" type="button">不再显示</button></div></div></article><article class="review-empty-card" id="reviewEmptyCard" hidden aria-live="polite"><div class="review-empty-status" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 5 6v5c0 4.6 2.9 8.3 7 10 4.1-1.7 7-5.4 7-10V6l-7-3Z"/><path d="M8 12h8"/></svg></div><h2 id="reviewEmptyTitle" tabindex="-1"></h2><p id="reviewEmptyDescription"></p><p id="reviewEmptyCount" hidden></p><div class="button-row"><button class="btn primary" data-action="review-return-home" type="button">返回首页</button><button class="btn secondary" data-action="review-open-capture" type="button">录入新错题</button></div></article></div></section>
-    <section class="view" data-view="data"><div class="section-head"><div><p class="eyebrow">LOCAL STORAGE</p><h1 class="section-title">数据管理</h1><p class="section-subtitle">题目图片和复习状态保存在当前电脑的本地数据文件夹中。</p></div><span class="badge">本地数据</span></div><div class="data-grid"><article class="card data-card data-overview"><h2>数据概览</h2><div class="stat-grid" style="margin-top:22px"><div><div class="stat-label">错题总数</div><div class="big" id="dataTotal">0</div></div><div><div class="stat-label">参与复习</div><div class="big" id="dataActive">0</div></div><div><div class="stat-label">不再显示</div><div class="big" id="dataHidden">0</div></div><div><div class="stat-label">图片数量</div><div class="big" id="dataImages">0</div></div></div></article><article class="card data-card folder-card"><h3>当前文件夹</h3><div class="folder"><div><strong id="dataFolder">尚未连接题库</strong><span>读写权限由浏览器授予</span></div><span class="badge">本地</span></div><div class="progress"><span></span></div><div class="data-actions"><button class="btn secondary" id="authorize" type="button">重新授权</button><button class="btn secondary" id="change" type="button">更换文件夹</button></div></article><article class="card data-card"><h3>数据状态</h3><div class="big" id="dataBytes">0 B</div><span class="stat-meta" id="dataUpdated">尚未备份</span><div class="data-actions"><button class="btn brand-btn" id="backup" type="button">备份到其他文件夹</button></div></article><article class="card data-card"><h3>覆盖恢复</h3><p class="stat-meta">从备份恢复会覆盖当前全部数据。</p><button class="btn danger" id="restore" type="button">从备份恢复</button></article></div></section>
+    <section class="view" data-view="home"><div class="section-head"><div><p class="eyebrow">TODAY'S REVIEW</p><h1 class="section-title">今天复习什么？</h1><p class="section-subtitle">连接题库后，这里会显示你的本地复习概览。</p></div><button class="btn primary" data-route="review" type="button">开始复习</button></div><div class="stat-grid"><article class="stat"><div class="stat-label">当前到期</div><div class="stat-value">4</div><div class="stat-meta">道等待复习</div></article><article class="stat"><div class="stat-label">全部错题</div><div class="stat-value">1,286</div><div class="stat-meta">持续积累</div></article><article class="stat"><div class="stat-label">本地数据</div><div class="stat-value">6.8<small> GB</small></div><div class="stat-meta">图片与复习状态</div></article><article class="stat"><div class="stat-label">最近连接</div><div class="stat-value">7<small> 天前</small></div><div class="stat-meta">模拟数据</div></article></div><div class="home-grid"><article class="card review-card"><div><p class="eyebrow">FOCUS SESSION</p><h2>把错题，<br>再做扎实</h2><p>今天先完成 4 道到期错题，保持稳定的复习节奏。</p></div><button class="btn" data-route="review" type="button">进入复习</button></article><article class="card"><h2>数据文件夹</h2><div class="folder"><div><strong id="homeFolder">本地题库已连接</strong><span>连接状态由当前应用状态统一管理</span></div><span class="badge">仅本地</span></div><div class="button-row" style="margin-top:22px"><button class="btn secondary" data-route="data" type="button">进入数据管理</button></div></article></div></section>
+    <section class="view" data-view="capture"><div class="section-head"><div><p class="eyebrow">CAPTURE A MISTAKE</p><h1 class="section-title">收集错题</h1><p class="section-subtitle">点击对应区域后按 Ctrl + V 粘贴截图。题图和答图分别放入对应区域。</p></div><span class="badge">界面演示</span></div><div class="capture-grid"><article class="card capture-panel"><h2>题目图片 <span class="count" id="qCount">0 / 5</span></h2><div class="paste" id="qPaste" tabindex="0" role="button" aria-label="题目图片粘贴区" aria-pressed="false"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 15l2.5-3 2 2 1.5-2 2 3M9 9h.01"/></svg><strong>点击此处，然后按 Ctrl + V</strong><span>支持 PNG、JPEG、WebP · 模拟预览</span></div><div class="previews" id="qPreviews"></div></article><article class="card capture-panel"><h2>答案图片 <span class="count" id="aCount">0 / 5</span></h2><div class="paste" id="aPaste" tabindex="0" role="button" aria-label="答案图片粘贴区" aria-pressed="false"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h3"/></svg><strong>点击此处，然后按 Ctrl + V</strong><span>答案解析将单独保存 · 模拟预览</span></div><div class="previews" id="aPreviews"></div></article></div><div class="capture-footer"><span>题目 0 张 · 答案 0 张 · 演示数据</span><div class="button-row" style="margin-top:0"><button class="btn secondary" data-route="home" type="button">取消</button><button class="btn primary" id="save" type="button" disabled>保存错题</button></div></div></section>
+    <section class="view" data-view="review"><div class="review-wrap"><div class="review-top"><div><p class="eyebrow">随机复习</p><span class="review-progress">本次已完成 <strong id="done">0</strong> 道</span></div><button class="btn ghost" data-route="home" type="button">结束复习</button></div><article class="card question-card"><div class="question-image" role="button" tabindex="0" aria-label="题目图片" id="questionImage"></div><button class="btn brand-btn" id="showAnswer" type="button">查看答案</button><div class="answer" id="answer"><div class="answer-image" id="answerImage"></div><div class="answer-actions"><button class="btn primary" id="wrong" type="button">答错</button><button class="btn brand-btn" id="right" type="button">答对</button><button class="btn secondary" id="hide" type="button">不再显示</button></div></div></article><article class="review-empty-card" id="reviewEmptyCard" hidden aria-live="polite"><div class="review-empty-status" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 5 6v5c0 4.6 2.9 8.3 7 10 4.1-1.7 7-5.4 7-10V6l-7-3Z"/><path d="M8 12h8"/></svg></div><h2 id="reviewEmptyTitle" tabindex="-1"></h2><p id="reviewEmptyDescription"></p><p id="reviewEmptyCount" hidden></p><div class="button-row"><button class="btn primary" id="reviewEmptyHome" type="button">返回首页</button><button class="btn secondary" id="reviewEmptyCapture" type="button">录入新错题</button></div></article></div></section>
+    <section class="view" data-view="data"><div class="section-head"><div><p class="eyebrow">LOCAL STORAGE</p><h1 class="section-title">数据管理</h1><p class="section-subtitle">题目图片和复习状态保存在当前电脑的本地数据文件夹中。</p></div><span class="badge">模拟数据</span></div><div class="data-grid"><article class="card data-card data-overview"><h2>数据概览</h2><div class="stat-grid" style="margin-top:22px"><div><div class="stat-label">错题总数</div><div class="big">1,286</div></div><div><div class="stat-label">参与复习</div><div class="big">842</div></div><div><div class="stat-label">不再显示</div><div class="big">128</div></div><div><div class="stat-label">图片数量</div><div class="big">3,864</div></div></div></article><article class="card data-card folder-card"><h3>当前文件夹</h3><div class="folder"><div><strong id="dataFolder">本地题库已连接</strong><span>读写权限由浏览器授予</span></div><span class="badge">本地</span></div><div class="progress"><span></span></div><div class="data-actions"><button class="btn secondary" id="authorize" type="button">重新授权</button><button class="btn secondary" id="change" type="button">更换文件夹</button></div></article><article class="card data-card"><h3>数据状态</h3><div class="big">6.8<small> GB</small></div><span class="stat-meta">最近更新：7 天前 · 模拟数据</span><div class="data-actions"><button class="btn brand-btn" id="backup" type="button">备份到其他文件夹</button></div></article><article class="card data-card"><h3>覆盖恢复</h3><p class="stat-meta">从备份恢复会覆盖当前全部数据。当前仅展示确认流程。</p><button class="btn danger" id="restore" type="button">从备份恢复</button></article></div></section>
   </main>
-  <div class="toast-region" id="toasts" aria-live="polite"></div><div class="backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">操作确认</h2><p id="modalText"></p><label class="checkline" id="checkWrap" hidden><input type="checkbox" id="check">我理解当前数据将被覆盖。</label><div class="modal-actions"><button class="btn secondary" id="cancel" type="button">取消</button><button class="btn primary" id="confirm" type="button"></button></div></div></div><div class="backdrop viewer" id="viewerBackdrop"><div class="modal" role="dialog" aria-modal="true"><h2>图片查看</h2><div class="viewer-image" id="viewerImage">请选择要查看的题目图片</div><div class="modal-actions"><button class="btn secondary" id="prev" type="button">上一张</button><button class="btn ghost" id="closeViewer" type="button">关闭</button><button class="btn secondary" id="next" type="button">下一张</button></div></div></div>
+  <div class="toast-region" id="toasts" aria-live="polite"></div><div class="backdrop" id="modalBackdrop"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><h2 id="modalTitle">操作确认</h2><p id="modalText"></p><label class="checkline" id="checkWrap" hidden><input type="checkbox" id="check">我理解当前数据将被覆盖。</label><div class="modal-actions"><button class="btn secondary" id="cancel" type="button">取消</button><button class="btn primary" id="confirm" type="button"></button></div></div></div><div class="backdrop viewer" id="viewerBackdrop"><div class="modal" role="dialog" aria-modal="true"><h2>图片查看</h2><div class="viewer-image" id="viewerImage">题目图片 1 · 模拟大图</div><div class="modal-actions"><button class="btn secondary" id="prev" type="button">上一张</button><button class="btn ghost" id="closeViewer" type="button">关闭</button><button class="btn secondary" id="next" type="button">下一张</button></div></div></div>
   <script>
     'use strict';
     const DEV_MODE=false;
     /* Legacy UI demo script retained below for reference; the data layer implementation follows. */
     /*
     const AppState={view:'init',connectionStatus:'disconnected',question:[],answer:[],done:6,lastTrigger:null};
-    // Legacy demo provider removed; DEV_MODE has no production data source.
+    const MockDataProvider={connectionStatus:'disconnected',overview(){return{due:4,total:1286,localSize:'6.8 GB',lastBackup:'7 days ago',isDemo:true}},review(){return{questionImages:['question image 1'],answerImages:['answer image'],isDemo:true}}};
     const $=id=>document.getElementById(id);
     const ToastManager={show(text,type='success'){const el=document.createElement('div');el.className='toast '+(type==='warning'?'warning':type==='error'?'error':'');el.textContent=text;$('toasts').append(el);window.setTimeout(()=>el.remove(),3200)}};
-    function setConnectionStatus(status){AppState.connectionStatus=status;const connected=status==='connected';document.querySelectorAll('[data-route="home"],[data-route="capture"],[data-route="review"],[data-route="data"]').forEach(el=>{el.hidden=!connected;el.disabled=!connected});const connection=$('connection');connection.className='connection '+status;const labels={disconnected:'本地离线运行 · 尚未连接题库',connecting:'本地离线运行 · 正在连接题库',connected:'本地离线运行 · 数据已连接','permission-denied':'本地离线运行 · 没有文件夹权限',error:'本地离线运行 · 连接失败'};connection.querySelector('.label').textContent=labels[status]||labels.error;Router.sync()}
+    function setConnectionStatus(status){AppState.connectionStatus=status;MockDataProvider.connectionStatus=status;const connected=status==='connected';document.querySelectorAll('[data-route="home"],[data-route="capture"],[data-route="review"],[data-route="data"]').forEach(el=>{el.hidden=!connected;el.disabled=!connected});const connection=$('connection');connection.className='connection '+status;const labels={disconnected:'本地离线运行 · 尚未连接题库',connecting:'本地离线运行 · 正在连接题库',connected:'本地离线运行 · 数据已连接','permission-denied':'本地离线运行 · 没有文件夹权限',error:'本地离线运行 · 连接失败'};connection.querySelector('.label').textContent=labels[status]||labels.error;Router.sync()}
     const Router={sync(){document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.dataset.view===AppState.view));document.querySelectorAll('[data-route]').forEach(el=>{const active=el.dataset.route===AppState.view;el.classList.toggle('active',active);el.setAttribute('aria-current',active?'page':'false')})},go(view){if(AppState.connectionStatus!=='connected'&&view!=='init')return;AppState.view=view;this.sync();$('mobileNav').classList.remove('open');$('menu').setAttribute('aria-expanded','false');window.scrollTo({top:0,behavior:'smooth'})}};
     const DialogManager={open({title,text,check=false,onConfirm}){AppState.lastTrigger=document.activeElement;$('modalTitle').textContent=title;$('modalText').textContent=text;$('checkWrap').hidden=!check;$('check').checked=false;$('confirm').disabled=check;$('confirm').textContent='确认';$('modalBackdrop').classList.add('open');$('confirm').onclick=()=>{this.close();onConfirm?.()};window.setTimeout(()=>$('confirm').focus(),0)},close(){$('modalBackdrop').classList.remove('open');AppState.lastTrigger?.focus()}};
-    const Viewer={open(text){$('viewerImage').textContent=text;$('viewerBackdrop').classList.add('open');$('closeViewer').focus()},close(){$('viewerBackdrop').classList.remove('open')}};
+    const Viewer={open(text){$('viewerImage').textContent=text+' · 模拟大图';$('viewerBackdrop').classList.add('open');$('closeViewer').focus()},close(){$('viewerBackdrop').classList.remove('open')}};
     function connectDemo(){if(AppState.connectionStatus==='connecting')return;setConnectionStatus('connecting');$('chooseDirectory').disabled=true;$('reconnectDirectory').disabled=true;window.setTimeout(()=>{setConnectionStatus('connected');$('chooseDirectory').disabled=false;$('reconnectDirectory').disabled=false;$('homeFolder').textContent='本地错题复习文件夹';$('dataFolder').textContent='本地错题复习文件夹';ToastManager.show('题库已连接（演示模式，未写入正式数据）');Router.go('home')},450)}
     function addImage(kind){const list=AppState[kind];if(list.length>=5)return ToastManager.show('最多支持 5 张图片','warning');list.push((kind==='question'?'题目图片 ':'答案图片 ')+(list.length+1));renderImages(kind);ToastManager.show('已添加模拟图片预览')}
     function renderImages(kind){const list=AppState[kind],wrap=$(kind==='question'?'qPreviews':'aPreviews');wrap.replaceChildren();list.forEach((name,i)=>{const row=document.createElement('div');row.className='preview';const thumb=document.createElement('div');thumb.className='thumb';thumb.textContent='图片';const info=document.createElement('div');info.className='preview-info';const strong=document.createElement('strong');strong.textContent=name;const meta=document.createElement('span');meta.textContent='模拟尺寸 1280 × 720 · 预览';info.append(strong,meta);const actions=document.createElement('div');actions.className='preview-actions';[['上移',i===0],['下移',i===list.length-1],['移除',false]].forEach(([label,disabled],action)=>{const b=document.createElement('button');b.type='button';b.textContent=action===0?'↑':action===1?'↓':'×';b.disabled=disabled;b.setAttribute('aria-label',label);b.onclick=()=>{if(action===2)list.splice(i,1);else{const n=action===0?i-1:i+1;[list[i],list[n]]=[list[n],list[i]]}renderImages(kind)};actions.append(b)});row.append(thumb,info,actions);wrap.append(row)});$(kind==='question'?'qCount':'aCount').textContent=list.length+' / 5';$('save').disabled=!AppState.question.length&&!AppState.answer.length}
@@ -135,7 +130,7 @@
     */
     'use strict';
     const $=id=>document.getElementById(id),now=()=>Date.now(),APP_ID='local-mistake-review',DATA_VERSION=1;
-      const AppState={view:'initialization',connectionStatus:'disconnected',question:[],answer:[],repository:null,qr:null,reviewSession:null,activePasteTarget:null,queue:[],processing:false,saving:false,dirty:false,urls:new Set(),activeTask:null,taskCancel:false};window.AppState=AppState;
+     const AppState={view:'init',connectionStatus:'disconnected',question:[],answer:[],repository:null,qr:null,reviewSession:null,activePasteTarget:null,queue:[],processing:false,saving:false,dirty:false,urls:new Set(),activeTask:null,taskCancel:false};window.AppState=AppState;
     const Toast={show(t,type='success'){const e=document.createElement('div');e.className='toast '+type;e.textContent=t;$('toasts').append(e);setTimeout(()=>e.remove(),3800)}};
     const fail=(name,message)=>Object.assign(new Error(message),{name});
     const formatBytes=n=>{if(!Number.isFinite(n)||n<0)return '0 B';if(n<1024)return `${n} B`;const u=['KB','MB','GB','TB'];let i=-1,v=n;do{v/=1024;i++}while(v>=1024&&i<u.length-1);return `${v.toFixed(v>=100||i===0?0:1)} ${u[i]}`};
@@ -146,17 +141,10 @@
      class Repo{constructor(h){this.handle=h;this.active='a';this.app=null;this.data={schemaVersion:1,revision:0,savedAt:0,questions:[]}}async load(){this.app=await FS.json(this.handle,'app.json');if(this.app.appId!==APP_ID||this.app.dataVersion>DATA_VERSION)throw fail('InvalidAppError','app.json 版本或 appId 不兼容，数据未修改');const candidates=[];for(const [slot,name] of [['a','questions-a.json'],['b','questions-b.json']])try{const d=await FS.json(this.handle,name);if(d.schemaVersion===1&&Number.isInteger(d.revision)&&Array.isArray(d.questions))candidates.push({slot,name,d})}catch{}if(!candidates.length)throw fail('CorruptedDataError','两份 questions 文件均损坏，未创建空题库；请从 recovery 或备份恢复');candidates.sort((x,y)=>y.d.revision-x.d.revision);this.active=candidates[0].slot;this.data=candidates[0].d;return this}async refresh(){return this.load()}async requireWrite(){const p=await this.handle.queryPermission({mode:'readwrite'});const permission=p==='granted'?p:await this.handle.requestPermission({mode:'readwrite'});if(permission!=='granted')throw fail('NotAllowedError','文件夹写入权限被拒绝，数据未修改；请重新授权后重试');return this.handle}async save(){return SafeWriter.save(this)}async initialize(){const t=now();this.app={appId:APP_ID,dataVersion:1,createdAt:t,updatedAt:t,lastBackupAt:null,lastIntegrityCheckAt:null};this.data={schemaVersion:1,revision:1,savedAt:t,questions:[]};await FS.write(this.handle,'app.json',JSON.stringify(this.app,null,2));await FS.write(this.handle,'questions-a.json',JSON.stringify(this.data,null,2));await FS.write(this.handle,'questions-b.json',JSON.stringify(this.data,null,2));return this}get current(){return this.data}}
      const makeError=fail,ErrorManager={show(e,context='操作失败'){Toast.show(`${context}：${e?.name||'错误'}。${e?.message||'请检查权限或数据后重试'}`,'error')}},FolderManager={get handle(){return AppState.repository?.handle||null},async requireWrite(){return AppState.repository.requireWrite()},async permission(h,request=false){const p=await h.queryPermission({mode:'readwrite'});return p==='granted'||(request&&await h.requestPermission({mode:'readwrite'}))?'granted':'denied'}},DialogManager={open({title,text,onConfirm}){const b=$('modalBackdrop');$('modalTitle').textContent=title;$('modalText').textContent=text;$('confirm').textContent='确认';b.classList.add('open');const old=document.activeElement;$('confirm').onclick=async()=>{b.classList.remove('open');old?.focus();await onConfirm?.()};$('cancel').onclick=()=>{b.classList.remove('open');old?.focus()};$('confirm').focus()},close(){$('modalBackdrop').classList.remove('open')}};
     const IntegrityChecker={async run(root,deep=false,repo=null){const started=now(),result={normalQuestions:0,abnormalQuestions:0,normalImages:0,missingImages:0,emptyFiles:0,sizeMismatch:0,orphanImages:0,jsonErrors:0,errors:[],warnings:[],completed:!deep,elapsed:0,checkedAt:null};let app,files=[];try{app=await FS.json(root,'app.json');if(app.appId!==APP_ID)result.errors.push('appId 不匹配');if(app.dataVersion>DATA_VERSION)result.errors.push('数据版本过高')}catch(e){result.jsonErrors++;result.errors.push(e.message)}for(const name of ['questions-a.json','questions-b.json'])try{const d=await FS.json(root,name);files.push(d);if(!d.questions?.length)result.emptyFiles++}catch(e){result.jsonErrors++;result.errors.push(e.message)}const data=files.sort((a,b)=>(b.revision||0)-(a.revision||0))[0];const refs=new Set();if(data?.questions)for(const q of data.questions){let ok=true;if(!q.id||!Array.isArray(q.questionImages)||!Array.isArray(q.answerImages)||!q.questionImages.length||!q.answerImages.length)ok=false;for(const list of [q.questionImages||[],q.answerImages||[]])for(const m of list){refs.add(m.fileName);try{const f=await FS.readFile(await root.getDirectoryHandle('images'),m.fileName);if(f.size<=0)ok=false;if(Number.isFinite(m.byteSize)&&f.size!==m.byteSize)result.sizeMismatch++;if(deep&&m.mimeType&&f.type&&m.mimeType!==f.type)result.warnings.push(`${m.fileName} MIME 不一致`);result.normalImages++}catch{result.missingImages++;ok=false}await yieldToMain()}ok?result.normalQuestions++:result.abnormalQuestions++}if(deep)try{const images=await root.getDirectoryHandle('images');for await(const x of images.values())if(x.kind==='file'&&!refs.has(x.name)){result.orphanImages++;try{result.orphanBytes=(result.orphanBytes||0)+(await x.getFile()).size}catch{}}}catch{}result.elapsed=now()-started;if(result.errors.length||result.missingImages||result.abnormalQuestions)result.level='严重';else if(result.warnings.length||result.sizeMismatch||result.orphanImages)result.level='警告';else result.level='正常';result.completed=true;result.checkedAt=now();if(repo&&result.completed){repo.app={...repo.app,lastIntegrityCheckAt:result.checkedAt};try{await FS.write(root,'app.json',JSON.stringify(repo.app,null,2))}catch{}}return result}};
-    const DataTaskManager={async start(kind,fn){if(AppState.activeTask)return false;AppState.activeTask=kind;AppState.taskCancel=false;window.updateTaskPanel?.();try{return await fn()}finally{AppState.activeTask=null;AppState.taskCancel=false;window.updateTaskPanel?.()}},cancel(){if(AppState.activeTask){AppState.taskCancel=true;window.updateTaskPanel?.()}}};
-      const Router={sync(){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.dataset.view===AppState.view));document.querySelectorAll('[data-route]').forEach(x=>{const active=x.dataset.route===AppState.view;x.classList.toggle('active',active);if(active)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')})},go(v){route(v)}};
-      const renderInitializationView=()=>{};
-      const renderHomeView=()=>{window.renderHomeDashboard?.();window.renderUnconnectedHome?.();};
-      const renderCaptureView=()=>{};
-      const renderReviewView=()=>{};
-      const renderDataView=()=>{window.renderData?.();window.updateDataPage?.();};
-      const VIEW_RENDERERS={initialization:renderInitializationView,home:renderHomeView,capture:renderCaptureView,review:renderReviewView,data:renderDataView};
-      const AppRouter={navigate(view){route(view)}};
+    const DataTaskManager={async start(kind,fn){if(AppState.activeTask)return false;AppState.activeTask=kind;AppState.taskCancel=false;try{return await fn()}finally{AppState.activeTask=null;AppState.taskCancel=false}},cancel(){if(AppState.activeTask)AppState.taskCancel=true}};
+     const Router={sync(){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.dataset.view===AppState.view));document.querySelectorAll('[data-route]').forEach(x=>{const active=x.dataset.route===AppState.view;x.classList.toggle('active',active);if(active)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')})},go(v){route(v)}};
      function setConnectionStatus(status){AppState.connectionStatus=status;const connected=status==='connected';document.querySelectorAll('[data-route="home"],[data-route="capture"],[data-route="review"],[data-route="data"]').forEach(x=>{x.hidden=!connected;x.disabled=!connected});const labels={disconnected:'本地离线运行 · 尚未连接题库',connecting:'本地离线运行 · 正在连接题库',connected:'本地离线运行 · 数据已连接','permission-denied':'本地离线运行 · 文件夹权限被拒绝',error:'本地离线运行 · 连接失败，请检查文件夹后重试'};const el=$('connection');el.className='connection '+status;el.querySelector('.label').textContent=labels[status]||labels.error;Router.sync()}
-      function route(v){if(!VIEW_RENDERERS[v])return;if(AppState.connectionStatus==='connected'||v==='initialization'||v==='home'){AppState.view=v;VIEW_RENDERERS[v]();Router.sync()}}
+     function route(v){if(AppState.connectionStatus==='connected'||v==='init'){AppState.view=v;document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.dataset.view===v));document.querySelectorAll('[data-route]').forEach(x=>{const active=x.dataset.route===v;x.classList.toggle('active',active);if(active)x.setAttribute('aria-current','page');else x.removeAttribute('aria-current')})}}
      async function connect(){try{setConnectionStatus('connecting');const h=await FS.pick();let r=new Repo(h);const names=[];for await(const x of h.values())names.push(x.name);if(names.length===0)await r.initialize();else{const allowed=['app.json','questions-a.json','questions-b.json','images','recovery'];const unknown=names.filter(n=>!allowed.includes(n));if(unknown.length)throw fail('InvalidFolderError','文件夹包含未知内容，未覆盖任何数据；请选择题库文件夹或空文件夹');r=await r.load()}AppState.repository=r;AppState.qr=new QuestionRepository(r);setConnectionStatus('connected');route('home');renderData();window.refreshRealStats?.();Toast.show('本地题库已连接')}catch(e){if(e.name!=='AbortError'){setConnectionStatus(e.name==='NotAllowedError'?'permission-denied':'error');Toast.show(`连接失败：${e.name||'未知错误'}。${e.message||'请检查文件夹权限后重试'}`,'error')}else setConnectionStatus('disconnected')}}
     const Processor={async run(file){if(!/^image\/(png|jpeg|webp)$/.test(file.type))throw fail('UnsupportedImageError','仅支持 PNG、JPEG、WebP');const b=await createImageBitmap(file),s=Math.min(1,2200/Math.max(b.width,b.height),Math.sqrt(4000000/(b.width*b.height))),w=Math.max(1,Math.floor(b.width*s)),h=Math.max(1,Math.floor(b.height*s)),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');if(!x)throw fail('CanvasError','无法创建 Canvas');x.drawImage(b,0,0,w,h);b.close?.();const mime='image/webp',blob=await new Promise(r=>c.toBlob(r,mime,.9));if(!blob)throw fail('EncodeError','图片编码失败');const url=URL.createObjectURL(blob);AppState.urls.add(url);return{sourceName:file.name||'clipboard-image',blob,previewUrl:url,width:w,height:h,byteSize:blob.size,mimeType:mime,extension:'webp'}}};
     function render(){['question','answer'].forEach(k=>{const p=k[0],a=AppState[k];$(p+'Count').textContent=`${a.length} / 5`;const wrap=$(p+'Previews');wrap.replaceChildren();a.forEach((im,i)=>{const row=document.createElement('div');row.className='preview';const pic=document.createElement('img');pic.className='thumb';pic.src=im.previewUrl;pic.alt=im.sourceName;const info=document.createElement('div');info.className='preview-info';const title=document.createElement('strong');title.textContent=im.sourceName;const meta=document.createElement('span');meta.textContent=`${im.width} x ${im.height} · ${formatBytes(im.byteSize)} · ${im.extension.toUpperCase()}`;info.append(title,meta);const acts=document.createElement('div');acts.className='preview-actions';[['↑',-1],['↓',1],['×',0]].forEach(([label,d])=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=(d<0&&i===0)||(d>0&&i===a.length-1);b.onclick=()=>{if(!d){URL.revokeObjectURL(im.previewUrl);AppState.urls.delete(im.previewUrl);a.splice(i,1)}else[a[i],a[i+d]]=[a[i+d],a[i]];AppState.dirty=true;render()};acts.append(b)});row.append(pic,info,acts);wrap.append(row)})});$('save').disabled=AppState.processing||AppState.saving||!AppState.question.length||!AppState.answer.length}
@@ -170,10 +158,10 @@
     function renderTask(p){const el=$('taskStatus');if(el)el.textContent=`${p.stage} · ${p.done}/${p.total} · ${formatBytes(p.bytes)} / ${formatBytes(p.totalBytes)}${p.name?' · '+p.name:''}`}
     async function backup(){if(!AppState.repository)return Toast.show('请先连接题库','warning');await DataTaskManager.start('backup',async()=>{try{const target=await FS.pick();if(await target.isSameEntry?.(AppState.repository.handle))throw fail('InvalidTargetError','备份目标不能是当前题库文件夹');const info=await AppState.repository.handle.values().next();const names=[];for await(const x of target.values())names.push(x.name);if(names.some(n=>!['app.json','questions-a.json','questions-b.json','images','recovery','backup.json'].includes(n)))throw fail('InvalidTargetError','目标文件夹包含未知文件');const source=AppState.repository.handle,images=await source.getDirectoryHandle('images').catch(()=>null),imageNames=images?await listFiles(images):[],files=['app.json','questions-a.json','questions-b.json',...imageNames.map(n=>'images/'+n)],totalBytes=(await Promise.all([]),0);let sum=0;for(const n of files)try{sum+=(await(n.includes('/')?FS.readFile(await source.getDirectoryHandle('images'),n.slice(7)):FS.readFile(source,n))).size}catch{}const stamp=new Date().toISOString().replace(/[-:TZ.]/g,'').slice(0,14),backupId=`backup_${stamp}_${Math.random().toString(16).slice(2,10)}`,manifest={backupId,appId:APP_ID,dataVersion:DATA_VERSION,backupVersion:1,status:'incomplete',createdAt:now(),completedAt:0,questionCount:AppState.qr.count(),imageCount:AppState.qr.images(),totalByteSize:sum,sourceRevision:AppState.repository.data.revision};await FS.write(target,'backup.json',JSON.stringify(manifest,null,2));const outImages=await target.getDirectoryHandle('images',{create:true}),recovery=await target.getDirectoryHandle('recovery',{create:true});const p={stage:'正在备份',done:0,total:files.length,totalBytes:sum,bytes:0,name:''};for(const n of ['app.json','questions-a.json','questions-b.json']){await FS.copyFile(source,target,n);p.done++;p.name=n;renderTask(p);await yieldToMain()}if(images)for(const n of imageNames)await copyDirFiles(images,outImages,'images/',[n],p);for(const n of ['app.json','questions-a.json','questions-b.json']){await FS.copyFile(source,recovery,n);await yieldToMain()}const check=await FS.json(target,'questions-a.json');if(!Array.isArray(check.questions))throw fail('VerificationError','备份校验失败');manifest.status='complete';manifest.completedAt=now();await FS.write(target,'backup.json',JSON.stringify(manifest,null,2));AppState.repository.app={...AppState.repository.app,lastBackupAt:manifest.completedAt};try{await FS.write(source,'app.json',JSON.stringify(AppState.repository.app,null,2))}catch(e){Toast.show('备份成功，但最近备份时间未能写回源题库','warning')}renderTask({stage:'备份完成',done:p.total,total:p.total,totalBytes:p.totalBytes,bytes:p.totalBytes});Toast.show(`备份完成：${formatBytes(sum)}`)}catch(e){Toast.show(`备份失败：${e.name} ${e.message}`,'error')}})}
     async function restore(){if(!AppState.repository)return Toast.show('请先连接题库','warning');await DataTaskManager.start('restore',async()=>{let source,staging,pre;try{source=await FS.pick('read');const manifest=await FS.json(source,'backup.json');if(manifest.status!=='complete')throw fail('InvalidBackupError','只允许恢复 status=complete 的备份');if(manifest.appId!==APP_ID||manifest.dataVersion>DATA_VERSION)throw fail('InvalidBackupError','备份版本不兼容');const backupA=await FS.json(source,'questions-a.json');if(!Array.isArray(backupA.questions))throw fail('InvalidBackupError','备份 questions 数据损坏');const ok=confirm(`将覆盖当前题库：${manifest.questionCount} 道题、${manifest.imageCount} 张图片、${formatBytes(manifest.totalByteSize)}。\n\n确认继续？`);if(!ok)return;const root=AppState.repository.handle;pre=await root.getDirectoryHandle('recovery',{create:true});const stamp=now();for(const n of ['app.json','questions-a.json','questions-b.json'])try{await FS.copyFile(root,pre,n)}catch{}staging=await root.getDirectoryHandle(`restore-staging-${stamp}`,{create:true});const sImages=await source.getDirectoryHandle('images'),dImages=await staging.getDirectoryHandle('images',{create:true});const imageNames=await listFiles(sImages),p={stage:'正在暂存恢复图片',done:0,total:imageNames.length,totalBytes:manifest.totalByteSize,bytes:0,name:''};for(const n of imageNames)await copyDirFiles(sImages,dImages,'images/',[n],p);for(const n of ['app.json','questions-a.json','questions-b.json'])await FS.copyFile(source,staging,n);const verify=await IntegrityChecker.run(staging,true);if(verify.missingImages||verify.abnormalQuestions)throw fail('VerificationError','恢复暂存区校验失败，原题库未修改');const finalImages=await root.getDirectoryHandle('images',{create:true});for(const n of imageNames)await FS.copyFile(dImages,finalImages,n);for(const n of ['questions-a.json','questions-b.json'])await FS.copyFile(staging,root,n);const nextApp=await FS.json(source,'app.json');nextApp.updatedAt=now();await FS.write(root,'app.json',JSON.stringify(nextApp,null,2));const fresh=await new Repo(root).load();AppState.repository=fresh;AppState.qr=new QuestionRepository(fresh);try{sessionStorage.removeItem('local-mistake-review.session')}catch{}renderData();Toast.show('覆盖恢复完成');route('home')}catch(e){if(e.name!=='AbortError')Toast.show(`恢复失败：${e.name} ${e.message}。当前题库保持不变`,'error')}finally{if(staging)try{await AppState.repository.handle.removeEntry(staging.name,{recursive:true})}catch{}}})}
-    async function checkIntegrity(deep=false){if(!AppState.repository)return Toast.show('请先连接题库','warning');await DataTaskManager.start('integrity-check',async()=>{renderTask({stage:deep?'正在深度检查':'正在快速检查',done:0,total:0,bytes:0,totalBytes:0});const result=await IntegrityChecker.run(AppState.repository.handle,deep,AppState.repository);renderTask({stage:'检查完成',done:result.normalImages+result.missingImages,total:result.normalImages+result.missingImages,bytes:0,totalBytes:0});const level=result.level;Toast.show(`${deep?'深度':'快速'}检查：${level}；正常题目 ${result.normalQuestions}，缺失图片 ${result.missingImages}，孤立图片 ${result.orphanImages||0}`,level==='严重'?'error':level==='警告'?'warning':'success');renderData(result)})}
+    async function checkIntegrity(deep=false){if(!AppState.repository)return Toast.show('请先连接题库','warning');await DataTaskManager.start('integrity-check',async()=>{const result=await IntegrityChecker.run(AppState.repository.handle,deep,AppState.repository);const level=result.level;Toast.show(`${deep?'深度':'快速'}检查：${level}；正常题目 ${result.normalQuestions}，缺失图片 ${result.missingImages}，孤立图片 ${result.orphanImages||0}`,level==='严重'?'error':level==='警告'?'warning':'success');renderData(result)})}
     function renderData(result){const q=AppState.qr;if(!q)return;const values=[q.count(),q.all().filter(x=>!x.hidden).length,q.all().filter(x=>x.hidden).length,q.images()];document.querySelectorAll('.data-overview .big').forEach((e,i)=>{if(values[i]!==undefined)e.textContent=values[i]});const folder=$('dataFolder');if(folder)folder.textContent=AppState.repository.handle.name||'本地题库';const status=$('taskStatus');if(status)status.textContent=AppState.activeTask?`正在执行：${AppState.activeTask}`:`数据版本 ${DATA_VERSION} · revision ${AppState.repository.data.revision}`;const integrity=$('integrityResult');if(integrity&&result)integrity.textContent=`${result.level} · 正常题目 ${result.normalQuestions} · 异常题目 ${result.abnormalQuestions} · 缺失图片 ${result.missingImages} · 孤立图片 ${result.orphanImages||0} · ${result.elapsed} ms`}
     function installDataPanel(){const grid=document.querySelector('.data-grid');if(!grid||$('backupManagerPanel'))return;const panel=document.createElement('article');panel.id='backupManagerPanel';panel.className='card data-card';panel.innerHTML='<h3>数据安全工具</h3><p class="stat-meta">逐文件复制，不生成 ZIP；任务互斥，失败不会覆盖源题库。</p><div class="data-actions"><button class="btn brand-btn" id="backupReal" type="button">备份到其他文件夹</button><button class="btn danger" id="restoreReal" type="button">从备份覆盖恢复</button><button class="btn secondary" id="checkQuick" type="button">快速完整性检查</button><button class="btn secondary" id="checkDeep" type="button">深度检查</button><button class="btn ghost" id="cancelTask" type="button">取消当前任务</button></div><p id="taskStatus" class="note">暂无数据任务</p><p id="integrityResult" class="note">尚未检查</p>';grid.append(panel);$('backupReal').onclick=backup;$('restoreReal').onclick=restore;$('backup').onclick=backup;$('restore').onclick=restore;$('checkQuick').onclick=()=>checkIntegrity(false);$('checkDeep').onclick=()=>checkIntegrity(true);$('cancelTask').onclick=()=>{DataTaskManager.cancel();Toast.show('已请求取消，当前文件完成后停止','warning')}}
-    document.addEventListener('click',e=>{const r=e.target.closest('[data-route]')?.dataset.route;if(r){e.preventDefault();route(r)}});$('chooseDirectory').onclick=connect;$('reconnectDirectory').onclick=connect;$('authorize').onclick=connect;$('change').onclick=connect;activate('qPaste','question');activate('aPaste','answer');['question','answer'].forEach(k=>{const z=$(k==='question'?'qPaste':'aPaste'),i=document.createElement('input');i.type='file';i.accept='image/png,image/jpeg,image/webp';i.multiple=true;i.hidden=true;i.onchange=()=>{AppState.queue.push(...[...i.files].slice(0,5-AppState[k].length).map(file=>({file,kind:k})));i.value='';drain()};const b=document.createElement('button');b.type='button';b.className='btn secondary';b.textContent='选择图片';b.onclick=()=>{AppState.activePasteTarget=k;i.click()};z.after(i);z.parentElement.append(b)});document.addEventListener('click',e=>{if(e.target.closest('#save')){e.preventDefault();e.stopImmediatePropagation();save()}},true);window.addEventListener('beforeunload',e=>{if(AppState.dirty||AppState.saving||AppState.processing||AppState.activeTask){e.preventDefault();e.returnValue='数据任务或录入尚未完成'}});installDataPanel();render();route('initialization');
+    document.addEventListener('click',e=>{const r=e.target.closest('[data-route]')?.dataset.route;if(r){e.preventDefault();route(r)}});$('chooseDirectory').onclick=connect;$('reconnectDirectory').onclick=connect;$('authorize').onclick=connect;$('change').onclick=connect;activate('qPaste','question');activate('aPaste','answer');['question','answer'].forEach(k=>{const z=$(k==='question'?'qPaste':'aPaste'),i=document.createElement('input');i.type='file';i.accept='image/png,image/jpeg,image/webp';i.multiple=true;i.hidden=true;i.onchange=()=>{AppState.queue.push(...[...i.files].slice(0,5-AppState[k].length).map(file=>({file,kind:k})));i.value='';drain()};const b=document.createElement('button');b.type='button';b.className='btn secondary';b.textContent='选择图片';b.onclick=()=>{AppState.activePasteTarget=k;i.click()};z.after(i);z.parentElement.append(b)});document.addEventListener('click',e=>{if(e.target.closest('#save')){e.preventDefault();e.stopImmediatePropagation();save()}},true);window.addEventListener('beforeunload',e=>{if(AppState.dirty||AppState.saving||AppState.processing||AppState.activeTask){e.preventDefault();e.returnValue='数据任务或录入尚未完成'}});installDataPanel();render();route('init');
   </script>
   <script>
     /* REVIEW_ENGINE_START */
@@ -205,71 +193,6 @@
       function showReviewEmptyState(){const state=reviewEmptyState();questionCard.hidden=true;emptyCard.hidden=false;emptyTitle.textContent=state.title;emptyDescription.textContent=state.description;emptyCount.hidden=!state.count;emptyCount.textContent=state.count;emptyCapture.textContent=(AppState.qr?.all?.()||[]).length?'录入新错题':'录入第一道错题';emptyTitle.setAttribute('aria-live','polite');requestAnimationFrame(()=>emptyTitle.focus());}
       function hideReviewEmptyState(){questionCard.hidden=false;emptyCard.hidden=true;}
       function endReview(nextRoute='home'){releaseCurrentQuestionResources();answerVisible=false;if(AppState.reviewSession){AppState.reviewSession.currentId=null;AppState.reviewSession.currentQuestionId=null;}ReviewSessionManager.end();AppState.reviewSession=null;renderStats();Router.go(nextRoute);}
-      async function handleReviewReturnHome(){
-        if(AppState.reviewSession?.isSubmittingResult||AppState.saving){Toast.show('正在保存当前结果，请稍候','warning');return;}
-        try{
-          const session=AppState.reviewSession;
-          if(session?.seenIds?.clear)session.seenIds.clear();
-          if(session){session.currentId=null;session.currentQuestionId=null;session.completedCount=0;session.done=0;}
-          ReviewSessionManager.end();
-          AppState.reviewSession=null;
-          answerVisible=false;
-          releaseCurrentQuestionResources();
-          window.Viewer?.close?.();
-          renderStats();
-          const next='home';
-          Router.go(next);
-          renderUnconnectedHome?.();
-          document.querySelector('[data-view="home"] h1,[data-view="home"] h2')?.focus?.();
-        }catch(e){ErrorManager.show(e,'无法返回首页，请重新加载页面。');}
-      }
-       async function refreshHomeDashboardData(){renderStats();window.renderHomeDashboard?.();window.renderUnconnectedHome?.();}
-       handleReviewReturnHome=async function(){
-         if(AppState.reviewSession?.isSubmittingResult){Toast.show('正在保存当前结果，请稍候','warning');return;}
-         ReviewSessionManager.end();
-         releaseCurrentQuestionResources();
-         AppState.reviewSession=null;
-         AppState.currentQuestionId=null;
-         AppState.answerVisible=false;
-         AppState.done=0;
-         await refreshHomeDashboardData();
-         AppRouter.navigate('home');
-       };
-       function openReviewConnectionDialog(){
-        const hasLast=Boolean(window.lastLibrary?.handle||FolderManager.handle);
-        AppState.pendingRoute='capture';
-        DialogManager.open({title:'需要先连接题库',text:'录入错题前，需要连接一个可读写的本地题库文件夹。',onConfirm:()=>{if(hasLast)document.getElementById('reconnectDirectory')?.click();else document.getElementById('chooseDirectory')?.click();}});
-        const actions=document.querySelector('#modalBackdrop .modal-actions');
-        if(actions&&!document.getElementById('reviewChooseFolder')){
-          const choose=document.createElement('button');choose.id='reviewChooseFolder';choose.type='button';choose.className='btn secondary';choose.textContent=hasLast?'选择其他题库文件夹':'选择题库文件夹';
-          choose.onclick=()=>{AppState.pendingRoute='capture';DialogManager.close();document.getElementById('chooseDirectory')?.click();};
-          actions.insertBefore(choose,document.getElementById('confirm'));
-        }
-        document.getElementById('confirm').textContent=hasLast?'连接上次打开的题库':'选择题库文件夹';
-      }
-      async function handleReviewOpenCapture(){
-        if(AppState.reviewSession?.isSubmittingResult||AppState.saving){Toast.show('正在保存当前结果，请稍候','warning');return;}
-        try{
-          const session=AppState.reviewSession;
-          if(session?.seenIds?.clear)session.seenIds.clear();
-          if(session){session.currentId=null;session.currentQuestionId=null;session.completedCount=0;session.done=0;}
-          ReviewSessionManager.end();
-          AppState.reviewSession=null;
-          answerVisible=false;
-          AppState.activePasteTarget=null;
-          releaseCurrentQuestionResources();
-          window.Viewer?.close?.();
-          if(AppState.connectionStatus!=='connected'||!AppState.repository){openReviewConnectionDialog();return;}
-          if(await FolderManager.permission(AppState.repository.handle,true)!=='granted')throw makeError('NotAllowedError','当前没有可读写文件夹权限');
-          AppState.question=[];AppState.answer=[];AppState.queue=[];AppState.dirty=false;
-          render();
-          Router.go('capture');
-          document.querySelector('[data-view="capture"] h1,[data-view="capture"] .paste')?.focus?.();
-        }catch(e){AppState.pendingRoute=null;setConnectionStatus(e.name==='NotAllowedError'?'permission-denied':'error');ErrorManager.show(e,'无法打开录入页面，当前题库数据没有被修改。');}
-      }
-      window.handleReviewReturnHome=handleReviewReturnHome;
-      window.handleReviewOpenCapture=handleReviewOpenCapture;
-      window.openReviewConnectionDialog=openReviewConnectionDialog;
       function currentQuestion(){return AppState.reviewSession?.currentId?AppState.qr.getQuestionById(AppState.reviewSession.currentId):null;}
       async function renderQuestion(q){releaseCurrentQuestionResources();answerVisible=false;hideReviewEmptyState();answer.classList.remove('open');showAnswer.hidden=false;showAnswer.disabled=true;right.disabled=wrong.disabled=hide.disabled=true;questionImage.setAttribute('aria-label','题目图片');if(!q){showReviewEmptyState();return;}placeholder(questionImage,'正在加载题目图片');try{await loadImages(q,'questionImages',questionImage);showAnswer.disabled=false;}catch(e){placeholder(questionImage,'题目图片加载失败，可结束复习或重试加载');}}
       async function startReview(){
@@ -286,8 +209,8 @@
       showAnswer.addEventListener('click',async()=>{const q=currentQuestion();if(!q)return;showAnswer.disabled=true;answer.classList.add('open');answerImage.textContent='正在加载答案';try{await loadImages(q,'answerImages',answerImage);right.disabled=wrong.disabled=hide.disabled=false;showAnswer.textContent='答案已加载';}catch(e){right.disabled=wrong.disabled=hide.disabled=true;showAnswer.disabled=false;showAnswer.textContent='重试加载答案';ErrorManager.show(e,'答案加载失败');}});
       right.addEventListener('click',()=>persistResult('correct'));wrong.addEventListener('click',()=>persistResult('wrong'));hide.addEventListener('click',()=>{if(AppState.reviewSession?.isSubmittingResult)return;DialogManager.open({title:'确认不再展示',text:'确定不再展示这道题吗？确认后，这道题将永久退出随机复习；图片文件会保留。',onConfirm:()=>persistResult('hidden')});});
       questionImage.addEventListener('click',()=>{if(currentQuestion()?.questionImages?.length)ToastManager.show('题目图片已按需加载');else ToastManager.show('当前题目没有图片','warning');});
-      document.querySelector('main').addEventListener('click',event=>{const el=event.target.closest('[data-action]');if(!el)return;event.preventDefault();if(el.dataset.action==='review-return-home')handleReviewReturnHome();if(el.dataset.action==='review-open-capture')handleReviewOpenCapture();});
-      document.addEventListener('click',e=>{if(e.target.closest('[data-route="home"]')&&AppState.reviewSession){e.preventDefault();e.stopImmediatePropagation();handleReviewReturnHome();}},true);
+      emptyHome.addEventListener('click',()=>endReview('home'));emptyCapture.addEventListener('click',()=>endReview('capture'));
+      document.addEventListener('click',e=>{if(e.target.closest('[data-route="home"]')&&AppState.reviewSession){e.preventDefault();e.stopImmediatePropagation();endReview('home');}},true);
       window.addEventListener('pagehide',releaseCurrentQuestionResources);
     })();
   </script>
@@ -297,455 +220,6 @@
   <script>
     document.querySelector('.init-layout .note')?.replaceChildren(document.createTextNode('数据只会写入你选择的本地文件夹。'));document.querySelector('[data-view="capture"] .badge')?.replaceChildren(document.createTextNode('本地录入'));document.querySelector('[data-view="data"] .badge')?.replaceChildren(document.createTextNode('本地数据'));document.querySelector('[data-view="capture"] .paste span')?.replaceChildren(document.createTextNode('支持 PNG、JPEG、WebP；最多 5 张'));
   </script>
-  <script>
-    // Reconnect-last-folder flow: this is layered onto the existing data layer so
-    // the folder format, IndexedDB key, and SafeWriter remain unchanged.
-    (() => {
-      const reconnectButton = document.getElementById('reconnectDirectory');
-      const chooseButton = document.getElementById('chooseDirectory');
-      const reconnectInfo = (() => {
-        let el = document.getElementById('reconnectInfo');
-        if (!el) { el = document.createElement('p'); el.id = 'reconnectInfo'; el.className = 'note'; reconnectButton?.parentElement?.after(el); }
-        return el;
-      })();
-      if (!reconnectButton) return;
-
-      reconnectButton.textContent = '连接上次打开的题库';
-      const LAST_CONNECTED_KEY = 'local-mistake-review.last-connected-at';
-      const statusLabels = {
-        disconnected: '本地离线运行 · 尚未连接题库',
-        connecting: '本地离线运行 · 正在连接',
-        connected: '本地离线运行 · 数据已连接',
-        'permission-denied': '本地离线运行 · 连接失败',
-        error: '本地离线运行 · 连接失败'
-      };
-      const baseSetStatus = setConnectionStatus;
-      setConnectionStatus = function(status) {
-        baseSetStatus(status);
-        const el = document.getElementById('connection');
-        if (el) el.querySelector('.label').textContent = statusLabels[status] || statusLabels.error;
-      };
-
-      Object.assign(FolderManager, {
-        db: 'mistake-review-folders', store: 'handles', key: 'current', handle: null,
-        async save(handle) {
-          this.handle = handle;
-          return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.db, 1);
-            request.onupgradeneeded = () => request.result.createObjectStore(this.store);
-            request.onerror = () => reject(request.error || fail('HandleStoreError', '无法保存上次题库记录'));
-            request.onsuccess = () => {
-              const tx = request.result.transaction(this.store, 'readwrite');
-              tx.objectStore(this.store).put(handle, this.key);
-              tx.oncomplete = resolve;
-              tx.onerror = () => reject(tx.error || fail('HandleStoreError', '无法保存上次题库记录'));
-            };
-          });
-        },
-        async load() {
-          if (!window.indexedDB) throw fail('HandleStoreError', '当前浏览器无法读取上次题库记录');
-          return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.db, 1);
-            request.onupgradeneeded = () => request.result.createObjectStore(this.store);
-            request.onerror = () => reject(request.error || fail('HandleStoreError', '无法读取上次题库记录'));
-            request.onsuccess = () => {
-              const get = request.result.transaction(this.store, 'readonly').objectStore(this.store).get(this.key);
-              get.onsuccess = () => { this.handle = get.result || null; resolve(this.handle); };
-              get.onerror = () => reject(get.error || fail('HandleStoreError', '无法读取上次题库记录'));
-            };
-          });
-        },
-        async permissionState() { return 'unknown'; }
-      });
-
-      const permissionText = state => ({
-        granted: '已授权', prompt: '需要重新授权', denied: '权限被拒绝', unknown: '无法检查权限'
-      }[state] || '无法检查权限');
-      const lastConnectedAt = () => {
-        try { const value = Number(localStorage.getItem(LAST_CONNECTED_KEY)); return Number.isFinite(value) && value ? new Date(value).toLocaleString() : ''; }
-        catch { return ''; }
-      };
-      const saveConnectedAt = () => { try { localStorage.setItem(LAST_CONNECTED_KEY, String(Date.now())); } catch {} };
-      const failureText = (name, error) => `无法连接“${name || '上次题库'}”\n\n${error?.message || '该文件夹可能被移动、删除，或浏览器访问权限已经失效。'}\n\n当前题库数据没有被修改。\n\n操作：重新尝试 · 重新选择题库文件夹 · 取消`;
-
-      async function showReconnectRecord() {
-        reconnectButton.disabled = true;
-        reconnectInfo.textContent = '正在读取上次打开的题库记录…';
-        try {
-          const handle = await FolderManager.load();
-          if (!handle) {
-            reconnectButton.textContent = '没有可连接的上次题库';
-            reconnectButton.disabled = true;
-            reconnectInfo.textContent = '尚未保存题库记录。请先选择错题数据文件夹。';
-            return;
-          }
-          reconnectButton.textContent = '连接上次打开的题库';
-          reconnectButton.disabled = false;
-          const state = await FolderManager.permissionState(handle);
-          const time = lastConnectedAt();
-          reconnectInfo.textContent = `上次题库：${handle.name || '未命名文件夹'} · 权限：${permissionText(state)}${time ? ` · 最近成功连接：${time}` : ''}`;
-        } catch (error) {
-          reconnectButton.textContent = '连接上次打开的题库';
-          reconnectButton.disabled = false;
-          reconnectInfo.textContent = '无法读取上次题库记录，请重新选择题库文件夹。';
-          reconnectButton.dataset.handleReadError = 'true';
-        }
-      }
-
-      function openReconnectDialog(handle, permission) {
-        const name = handle?.name || '未命名文件夹';
-        AppState.lastTrigger = reconnectButton;
-        DialogManager.open({
-          title: '连接上次打开的题库？',
-          text: `上次打开的题库为：\n\n“${name}”\n\n确认后，应用将尝试重新获得访问权限并加载该题库。\n\n权限状态：${permissionText(permission)}`,
-          onConfirm: () => connectSavedHandle(handle, name)
-        });
-        document.getElementById('confirm').textContent = '进入上次题库';
-        document.getElementById('confirm').classList.remove('primary');
-        document.getElementById('confirm').classList.add('brand-btn');
-        const modal = document.querySelector('#modalBackdrop .modal');
-        if (modal) { modal.tabIndex = -1; modal.focus(); }
-      }
-
-      function openFailureDialog(name, error) {
-        AppState.lastTrigger = reconnectButton;
-        DialogManager.open({ title: `无法连接“${name}”`, text: failureText(name, error), onConfirm: () => reconnectButton.click() });
-        const actions = document.querySelector('#modalBackdrop .modal-actions');
-        const confirmButton = document.getElementById('confirm');
-        confirmButton.textContent = '重新尝试';
-        confirmButton.classList.remove('primary');
-        confirmButton.classList.add('brand-btn');
-        let choose = document.getElementById('chooseAnotherFolder');
-        if (!choose) {
-          choose = document.createElement('button');
-          choose.id = 'chooseAnotherFolder';
-          choose.type = 'button';
-          choose.className = 'btn secondary';
-          choose.textContent = '重新选择题库文件夹';
-          actions.insertBefore(choose, confirmButton);
-        }
-        choose.onclick = () => { DialogManager.close(); chooseButton?.click(); };
-        const modal = document.querySelector('#modalBackdrop .modal');
-        if (modal) { modal.tabIndex = -1; modal.focus(); }
-      }
-
-      async function connectSavedHandle(handle, name) {
-        const confirmButton = document.getElementById('confirm');
-        reconnectButton.disabled = true;
-        confirmButton.disabled = true;
-        confirmButton.setAttribute('aria-busy', 'true');
-        confirmButton.textContent = '正在连接…';
-        setConnectionStatus('connecting');
-        try {
-          FS.handle = handle;
-          let permission = await handle.queryPermission({ mode: 'readwrite' });
-          if (permission === 'prompt') permission = await handle.requestPermission({ mode: 'readwrite' });
-          if (permission !== 'granted') throw fail('NotAllowedError', '文件夹权限被拒绝，请重新授权后重试。');
-          const repo = await new Repo(handle).load();
-          AppState.repository = repo;
-          AppState.qr = new QuestionRepository(repo);
-          await FolderManager.save(handle);
-          saveConnectedAt();
-          setConnectionStatus('connected');
-          route('home');
-          renderData();
-          window.refreshRealStats?.();
-          Toast.show('本地题库已连接');
-        } catch (error) {
-          setConnectionStatus(error.name === 'NotAllowedError' ? 'permission-denied' : 'error');
-          openFailureDialog(name, error);
-        } finally {
-          confirmButton.removeAttribute('aria-busy');
-          confirmButton.disabled = false;
-          reconnectButton.disabled = false;
-          if (!document.getElementById('chooseAnotherFolder')) confirmButton.textContent = '进入上次题库';
-        }
-      }
-
-      reconnectButton.onclick = async () => {
-        if (AppState.connectionStatus === 'connecting') return;
-        if (reconnectButton.dataset.handleReadError === 'true') {
-          Toast.show('无法读取上次题库记录，请重新选择题库文件夹。', 'error');
-          return;
-        }
-        try {
-          const handle = await FolderManager.load();
-          if (!handle) return showReconnectRecord();
-          openReconnectDialog(handle, await FolderManager.permissionState(handle));
-        } catch {
-          reconnectButton.dataset.handleReadError = 'true';
-          Toast.show('无法读取上次题库记录，请重新选择题库文件夹。', 'error');
-        }
-      };
-
-      // A newly selected folder becomes the last folder only after a real load succeeds.
-      const originalSetStatus = setConnectionStatus;
-      setConnectionStatus = function(status) {
-        originalSetStatus(status);
-        if (status === 'connected' && FS.handle) {
-          FolderManager.save(FS.handle).then(() => { saveConnectedAt(); showReconnectRecord(); }).catch(() => {});
-        }
-      };
-      showReconnectRecord();
-    })();
-  </script>
   <script>const routeBeforePasteReset=route;route=v=>{if(v!=='capture')setActivePasteTarget(null);routeBeforePasteReset(v)};document.addEventListener('click',e=>{const r=e.target.closest('[data-route]')?.dataset.route;if(r&&r!=='capture')setActivePasteTarget(null);const b=e.target.closest('button');const panel=e.target.closest('.capture-panel');if(b&&panel&&b.textContent.trim()==='选择图片')setActivePasteTarget(panel.querySelector('#qPaste')?'question':'answer')});</script>
 </body>
-  <script>
-    (()=>{
-      const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value};
-      const when=value=>{if(!Number.isFinite(value))return '本次连接';const diff=Math.max(0,Date.now()-value),m=60000,h=60*m,d=24*h;if(diff<m)return '刚刚';if(diff<h)return `${Math.floor(diff/m)} 分钟前`;if(diff<d)return `${Math.floor(diff/h)} 小时前`;const date=new Date(value),today=new Date();return date.toDateString()===today.toDateString()?'今天':date.toISOString().slice(0,10)};
-      const backup=value=>Number.isFinite(value)?new Date(value).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}):'尚未备份';
-      function getHomeDashboardData(){const s=window.AppState,connected=s?.connectionStatus==='connected',questions=connected?(s.qr?.all?.()||[]):[],images=questions.flatMap(q=>(Array.isArray(q.questionImages)?q.questionImages:[]).concat(Array.isArray(q.answerImages)?q.answerImages:[]));let savedAt=s?.lastConnectedAt;try{savedAt=savedAt||Number(localStorage.getItem('local-mistake-review.last-connected-at'))||null}catch{}return{totalCount:connected?questions.length:null,activeCount:connected?questions.filter(q=>q.hidden===false).length:null,hiddenCount:connected?questions.filter(q=>q.hidden===true).length:null,dueCount:connected?questions.filter(q=>q.hidden===false&&Number.isFinite(q.nextReviewAt)&&q.nextReviewAt<=Date.now()).length:null,imageCount:connected?images.length:null,registeredByteSize:connected?images.reduce((n,x)=>n+(Number.isFinite(x.byteSize)?x.byteSize:0),0):null,lastBackupAt:connected?s.repository?.app?.lastBackupAt??null:null,lastConnectedAt:connected?(s.lastConnectedAt??(s.lastConnectedAt=savedAt||Date.now())):null,folderName:connected?(s.repository?.handle?.name??'尚未连接题库'):'尚未连接题库',connectionStatus:s?.connectionStatus||'disconnected'}}
-      function renderHomeDashboard(){const d=getHomeDashboardData(),ok=d.connectionStatus==='connected',empty=ok&&d.totalCount===0,due=ok&&d.dueCount>0;set('homeDue',ok?d.dueCount.toLocaleString():'—');set('homeTotal',ok?d.totalCount.toLocaleString():'—');set('homeBytes',ok?formatBytes(d.registeredByteSize):'—');set('homeConnected',ok?when(d.lastConnectedAt):'未连接');set('homeBackup',ok?`最近备份：${backup(d.lastBackupAt)}`:'未连接');set('homeFolder',d.folderName);set('homeConnectionHint',ok?'连接状态由当前应用状态统一管理':'请先连接题库');set('dataTotal',ok?d.totalCount.toLocaleString():'0');set('dataActive',ok?d.activeCount.toLocaleString():'0');set('dataHidden',ok?d.hiddenCount.toLocaleString():'0');set('dataImages',ok?d.imageCount.toLocaleString():'0');set('dataBytes',ok?formatBytes(d.registeredByteSize):'0 B');set('dataFolder',d.folderName);set('dataUpdated',ok?`最近备份：${backup(d.lastBackupAt)}`:'尚未备份');set('homeHeadline',!ok?'连接题库后查看复习':empty?'还没有收录错题':due?'今天复习什么？':'今天的复习已经完成');set('homeSummary',!ok?'请先连接题库。':empty?'先录入一道题目和答案，系统会将它加入随机复习。':due?`当前有 ${d.dueCount} 道题需要复习，系统会按照到期时间和答题情况随机抽取。`:'当前没有到期题目。到达下次复习时间后，系统会再次展示。');set('focusSummary',!ok?'连接题库后开始复习。':empty?'先录入第一道错题，开始建立你的复习库。':due?`今天先完成 ${d.dueCount} 道到期错题，保持稳定的复习节奏。`:'当前没有到期题目，先录入新错题吧。');const main=document.getElementById('homeReviewButton');if(main){main.textContent=empty?'录入第一道错题':due?'开始复习':'录入新错题';main.dataset.route=empty?'capture':due?'review':'capture';main.disabled=!ok}const focus=document.getElementById('focusReviewButton');if(focus)focus.disabled=!ok||empty;document.querySelectorAll('[data-route="capture"]').forEach(b=>b.disabled=!ok);return d}
-      window.getHomeDashboardData=getHomeDashboardData;window.refreshRealStats=renderHomeDashboard;window.renderStats=renderHomeDashboard;const previousRenderData=window.renderData;window.renderData=function(...args){const result=previousRenderData?.(...args);renderHomeDashboard();return result};const previousRoute=route;route=function(value){const result=previousRoute(value);renderHomeDashboard();return result};window.addEventListener('load',renderHomeDashboard);document.addEventListener('click',e=>{if(e.target.closest('[data-route="home"]'))setTimeout(renderHomeDashboard,0)});renderHomeDashboard();
-    })();
-  </script>
-  <script>
-    document.querySelector('[data-view="home"] .section-head [data-route="review"]')?.setAttribute('id','homeReviewButton');document.querySelector('[data-view="home"] .review-card [data-route="review"]')?.setAttribute('id','focusReviewButton');window.refreshRealStats?.();
-  </script>
-  <script>
-    // Final single-owner implementation for the last-library lifecycle.
-    (() => {
-      const button = document.getElementById('reconnectDirectory');
-      const choose = document.getElementById('chooseDirectory');
-      if (!button || !choose) return;
-      const info = document.getElementById('reconnectInfo') || (() => {
-        const el = document.createElement('p'); el.id = 'reconnectInfo'; el.className = 'note';
-        button.parentElement?.after(el); return el;
-      })();
-      const DB = 'mistake-review-folders', STORE = 'handles', KEY = 'current';
-      const state = window.lastLibrary = window.lastLibrary || { handle: null, name: '', lastOpenedAt: null, permission: 'unknown', loadState: 'loading' };
-      if (window.AppState) AppState.lastLibrary = state;
-      const set = (status) => { try { setConnectionStatus(status); } catch {} };
-      const dbRequest = (mode, action) => new Promise((resolve, reject) => {
-        if (!window.indexedDB) return reject(fail('HandleStoreError', '当前浏览器无法读取上次题库记录'));
-        const request = indexedDB.open(DB, 1);
-        request.onupgradeneeded = () => { if (!request.result.objectStoreNames.contains(STORE)) request.result.createObjectStore(STORE); };
-        request.onerror = () => reject(request.error || fail('HandleStoreError', 'IndexedDB 打开失败'));
-        request.onsuccess = () => {
-          const database = request.result;
-          try {
-            const tx = database.transaction(STORE, mode);
-            let result;
-            action(tx.objectStore(STORE), value => { result = value; }, reject);
-            tx.onerror = () => reject(tx.error || fail('HandleStoreError', 'IndexedDB 操作失败'));
-            tx.oncomplete = () => { database.close(); resolve(result); };
-          } catch (error) { database.close(); reject(error); }
-        };
-      });
-      const DirectoryHandleStore = window.DirectoryHandleStore = {
-        async saveLastLibrary(handle) {
-          if (!handle || typeof handle.queryPermission !== 'function') throw fail('HandleStoreError', '无效的目录句柄，无法保存上次题库');
-          const name = handle.name || '';
-          const lastOpenedAt = Date.now();
-          await dbRequest('readwrite', (store, resolve) => {
-            // The handle itself is stored directly; metadata uses separate keys in the same store.
-            store.put(handle, KEY); store.put(name, 'name'); store.put(lastOpenedAt, 'lastOpenedAt'); resolve();
-          });
-          state.handle = handle; state.name = name; state.lastOpenedAt = lastOpenedAt; state.permission = 'unknown'; state.loadState = 'available';
-        },
-        async loadLastLibrary() {
-          const values = await dbRequest('readonly', (store, resolve, reject) => {
-            const out = {}; let pending = 3;
-            [['handle', KEY], ['name', 'name'], ['lastOpenedAt', 'lastOpenedAt']].forEach(([key, id]) => {
-              const request = store.get(id); request.onsuccess = () => { out[key] = request.result; if (!--pending) resolve(out); };
-              request.onerror = () => reject(request.error || fail('HandleStoreError', '无法读取上次题库记录'));
-            });
-          });
-          if (values.handle && typeof values.handle.queryPermission !== 'function') throw fail('HandleDeserializeError', '上次题库目录句柄无法恢复');
-          const handle = values.handle || null;
-          state.handle = handle; state.name = handle?.name || values.name || ''; state.lastOpenedAt = values.lastOpenedAt || null; state.permission = 'unknown'; state.loadState = handle ? 'available' : 'unavailable'; window.renderUnconnectedHome?.();
-          return state;
-        }
-      };
-      // Older compatibility code may still observe connectionStatus; prevent it
-      // from writing a second, incompatible record or repainting this button.
-      if (typeof FolderManager !== 'undefined') FolderManager.save = async handle => { FolderManager.handle = handle; };
-
-      const label = { disconnected: '本地离线运行 · 尚未连接题库', connecting: '本地离线运行 · 正在连接', connected: '本地离线运行 · 数据已连接', error: '本地离线运行 · 连接失败', 'permission-denied': '本地离线运行 · 连接失败' };
-      const originalStatus = setConnectionStatus;
-      setConnectionStatus = status => { originalStatus(status); const el = document.querySelector('#connection .label'); if (el) el.textContent = label[status] || label.error; };
-      const permissionText = p => ({ granted: '已授权', prompt: '需要重新授权', denied: '权限被拒绝', unknown: '无法检查权限' }[p] || '无法检查权限');
-      const formatLastOpened = value => value ? ` · 最近打开：${new Date(value).toLocaleString()}` : '';
-      const updateButton = () => {
-        button.dataset.action = 'openLastLibraryDialog';
-        if (state.loadState === 'available' && state.handle) {
-          button.disabled = false; button.textContent = '连接上次打开的题库';
-          info.textContent = `上次题库：${state.name}${formatLastOpened(state.lastOpenedAt)}`;
-        } else if (state.loadState === 'error') {
-          button.disabled = true; button.textContent = '无法读取上次题库记录'; info.textContent = '请重新选择题库文件夹。';
-        } else {
-          button.disabled = true; button.textContent = '没有上次打开的题库'; info.textContent = '请先选择错题数据文件夹。';
-        }
-        renderDiagnostics();
-      };
-      const renderDiagnostics = () => {
-        if (typeof DEV_MODE === 'undefined' || !DEV_MODE) return;
-        let panel = document.getElementById('lastLibraryDiagnostics');
-        if (!panel) { panel = document.createElement('pre'); panel.id = 'lastLibraryDiagnostics'; panel.className = 'note'; document.querySelector('[data-view="init"] .init-layout > div')?.append(panel); }
-        panel.textContent = `IndexedDB：${state.loadState === 'error' ? '打开失败' : '已打开'}\n找到句柄：${state.handle ? '是' : '否'}\n上次题库：${state.name || '-'}\npermission：${state.permission}\n按钮点击：${window.__lastLibraryButtonClicked ? '是' : '否'}\n确认弹窗：${window.__lastLibraryDialogOpened ? '是' : '否'}\n最近错误：${window.__lastLibraryError || '-'}`;
-      };
-      const dialogModal = () => document.querySelector('#modalBackdrop .modal');
-      const focusDialog = () => { const el = dialogModal(); if (el) { el.tabIndex = -1; el.focus(); } };
-      const showFailure = (name, error) => {
-        AppState.lastTrigger = button;
-        DialogManager.open({ title: `无法连接“${name}”`, text: `${error?.message || '文件夹可能已被移动、删除，或访问权限已经失效。'}\n\n当前题库数据没有被修改。\n\n请重新尝试、重新选择题库文件夹，或取消。`, onConfirm: () => openLastLibraryDialog() });
-        const confirm = document.getElementById('confirm'); confirm.textContent = '重新尝试'; confirm.classList.remove('primary'); confirm.classList.add('brand-btn');
-        let change = document.getElementById('chooseAnotherFolder');
-        if (!change) { change = document.createElement('button'); change.id = 'chooseAnotherFolder'; change.type = 'button'; change.className = 'btn secondary'; change.textContent = '重新选择题库文件夹'; document.querySelector('#modalBackdrop .modal-actions').insertBefore(change, confirm); }
-        change.onclick = () => { DialogManager.close(); choose.click(); }; focusDialog();
-      };
-      async function connectLastLibrary() {
-        const handle = state.handle, name = state.name || handle?.name || '上次题库';
-        const confirm = document.getElementById('confirm');
-        button.disabled = true; confirm.disabled = true; confirm.setAttribute('aria-busy', 'true'); confirm.textContent = '正在连接…'; set('connecting');
-        try {
-          const permission = await handle.queryPermission({ mode: 'readwrite' });
-          if (permission === 'prompt') {
-            const requested = await handle.requestPermission({ mode: 'readwrite' });
-            if (requested !== 'granted') throw fail('NotAllowedError', '文件夹权限被拒绝，请重新授权后重试。');
-          } else if (permission !== 'granted') throw fail('NotAllowedError', '文件夹权限被拒绝，请重新授权后重试。');
-          FS.handle = handle;
-          const repo = await new Repo(handle).load();
-          if (!repo.app || repo.app.appId !== APP_ID || !Number.isInteger(repo.app.dataVersion) || repo.app.dataVersion < 1 || repo.app.dataVersion > DATA_VERSION) throw fail('InvalidAppError', 'app.json 的 appId 或 dataVersion 不兼容，题库数据没有被修改。');
-          AppState.repository = repo; AppState.qr = new QuestionRepository(repo);
-          await DirectoryHandleStore.saveLastLibrary(handle);
-          AppState.lastConnectedAt = state.lastOpenedAt;
-          set('connected'); route('home'); renderData?.(); window.refreshRealStats?.(); Toast.show('本地题库已连接');
-          updateButton();
-        } catch (error) {
-          set(error.name === 'NotAllowedError' ? 'permission-denied' : 'error'); state.permission = error.name === 'NotAllowedError' ? 'denied' : 'unknown'; window.__lastLibraryError = error.message || error.name; renderDiagnostics(); showFailure(name, error);
-        } finally {
-          confirm.removeAttribute('aria-busy'); confirm.disabled = false; button.disabled = state.loadState !== 'available';
-          if (!document.getElementById('chooseAnotherFolder')) confirm.textContent = '进入上次题库';
-        }
-      }
-      function openLastLibraryDialog() {
-        window.__lastLibraryButtonClicked = true; renderDiagnostics();
-        if (!state.handle || state.loadState !== 'available') { updateButton(); return; }
-        AppState.lastTrigger = button;
-        window.__lastLibraryDialogOpened = true; renderDiagnostics();
-        DialogManager.open({ title: '连接上次打开的题库？', text: `上次打开的题库为：\n\n“${state.name}”\n\n应用将检查文件夹权限并加载其中的题目数据。`, onConfirm: connectLastLibrary });
-        const confirm = document.getElementById('confirm'); confirm.textContent = '进入上次题库'; confirm.classList.remove('primary'); confirm.classList.add('brand-btn'); focusDialog();
-      }
-      window.openLastLibraryDialog = openLastLibraryDialog;
-      button.onclick = openLastLibraryDialog;
-      document.getElementById('cancel')?.addEventListener('click', () => setTimeout(() => button.focus(), 0));
-      document.getElementById('modalBackdrop')?.addEventListener('click', event => { if (event.target.id === 'modalBackdrop') setTimeout(() => button.focus(), 0); });
-      window.addEventListener('keydown', event => { if (event.key === 'Escape' && document.getElementById('modalBackdrop')?.classList.contains('open')) { DialogManager.close(); button.focus(); } });
-      choose.addEventListener('click', () => { setTimeout(() => { if (AppState.connectionStatus === 'connected' && FS.handle) DirectoryHandleStore.saveLastLibrary(FS.handle).catch(error => Toast.show(`无法保存上次题库记录：${error.message}`, 'error')); }, 0); }, { once: false });
-      const previousSetStatus = setConnectionStatus;
-      setConnectionStatus = status => { previousSetStatus(status); if (status === 'connected' && FS.handle) DirectoryHandleStore.saveLastLibrary(FS.handle).catch(error => Toast.show(`无法保存上次题库记录：${error.message}`, 'error')); };
-      window.addEventListener('load', async () => { try { await DirectoryHandleStore.loadLastLibrary(); } catch (error) { state.loadState = 'error'; state.handle = null; state.name = ''; window.__lastAppError = { name: error.name, message: error.message }; } updateButton(); setTimeout(updateButton, 250); });
-      updateButton();
-    })();
-  </script>
-  <script>
-    // Data management owns one compact UI surface; the storage managers above remain unchanged.
-    (() => {
-      const view = document.querySelector('[data-view="data"]');
-      if (!view) return;
-      view.innerHTML = `
-        <div class="section-head"><div><p class="eyebrow">LOCAL STORAGE</p><h1 class="section-title">数据管理</h1><p class="section-subtitle">题目图片和复习状态保存在当前电脑的本地数据文件夹中。</p></div><span class="badge" id="dataConnectionBadge" hidden>本地</span></div>
-        <div class="data-grid">
-          <article class="card data-card data-overview"><h2>数据概览</h2><div class="stat-grid" style="margin-top:22px">
-            <div><div class="stat-label">错题总数</div><div class="big" id="dataTotal">—</div></div><div><div class="stat-label">参与复习</div><div class="big" id="dataActive">—</div></div><div><div class="stat-label">不再展示</div><div class="big" id="dataHidden">—</div></div><div><div class="stat-label">图片数量</div><div class="big" id="dataImages">—</div></div><div><div class="stat-label">数据大小</div><div class="big" id="dataBytes">—</div></div><div><div class="stat-label">最近备份时间</div><div class="big" id="dataUpdated">—</div></div>
-          </div><p class="note" id="dataOverviewNote">请先连接题库</p></article>
-          <article class="card data-card folder-card"><h3>当前题库</h3><div class="folder"><div><strong id="dataFolder">尚未连接题库</strong><span id="dataPermission">需要选择或重新连接本地题库文件夹</span></div><span class="badge" id="dataLocalBadge" hidden>本地</span></div><div class="permission-line"><span>数据版本 <strong id="dataVersion">—</strong></span><span>revision <strong id="dataRevision">—</strong></span><span class="badge" id="dataStateBadge" hidden>已连接</span></div><p class="note" id="dataConnectedAt">最近连接：—</p><div class="data-actions"><button class="btn brand-btn" id="manageConnection" type="button">连接题库文件夹</button></div></article>
-          <article class="card data-card"><h3>备份与数据检查</h3><p class="stat-meta">备份会将题库逐文件复制到另一个本地文件夹，不生成 ZIP，也不会上传数据。</p><div class="data-actions"><button class="btn brand-btn" id="backupAction" type="button">备份题库</button><button class="btn danger" id="restoreAction" type="button">从备份覆盖恢复</button><button class="btn secondary" id="integrityAction" type="button">检查数据完整性</button></div><p class="note data-disabled-note" id="safetyDisabledNote" hidden>请先连接题库。</p></article>
-          <article class="card task-panel" id="taskPanel" hidden><div class="task-head"><strong id="taskName">正在执行数据任务</strong><button class="btn secondary" id="cancelTask" type="button">取消任务</button></div><div class="task-progress"><span id="taskProgressBar"></span></div><p class="task-meta" id="taskStatus"></p></article>
-        </div>`;
-
-      const text = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-      const connected = () => AppState.connectionStatus === 'connected' && !!AppState.repository;
-      const permissionLabel = p => ({granted:'已授权',prompt:'需要重新授权',denied:'权限被拒绝',unknown:'无法读取'}[p] || '无法读取');
-      const taskLabel = k => ({backup:'备份',restore:'恢复','integrity-check':'检查'}[k] || '数据任务');
-      window.updateDataPage = () => {
-        const ok = connected(), repo = AppState.repository, q = AppState.qr, all = q?.all?.() || [];
-        text('dataTotal', ok ? all.length.toLocaleString() : '—'); text('dataActive', ok ? all.filter(x=>x.hidden===false).length.toLocaleString() : '—'); text('dataHidden', ok ? all.filter(x=>x.hidden===true).length.toLocaleString() : '—'); text('dataImages', ok ? q.images().toLocaleString() : '—'); text('dataBytes', ok ? formatBytes(q.bytes()) : '—');
-        text('dataUpdated', ok ? (repo.app?.lastBackupAt ? new Date(repo.app.lastBackupAt).toLocaleDateString('zh-CN') : '尚未备份') : '—'); text('dataOverviewNote', ok ? '' : '请先连接题库');
-        text('dataFolder', ok ? (repo.handle.name || '本地题库') : '尚未连接题库'); text('dataPermission', ok ? '当前权限：正在读取…' : '需要选择或重新连接本地题库文件夹'); if(ok&&repo.handle?.queryPermission)repo.handle.queryPermission({mode:'readwrite'}).then(p=>text('dataPermission',`当前权限：${permissionLabel(p)}`)).catch(()=>text('dataPermission','当前权限：无法读取')); text('dataVersion', ok ? `v${repo.app?.dataVersion ?? DATA_VERSION}` : '—'); text('dataRevision', ok ? String(repo.data?.revision ?? '—') : '—');
-        text('dataConnectedAt', ok ? `最近连接：${when?.(AppState.lastConnectedAt) || '本次连接'}` : '最近连接：—');
-        document.getElementById('dataConnectionBadge').hidden = !ok; document.getElementById('dataLocalBadge').hidden = !ok; document.getElementById('dataStateBadge').hidden = !ok;
-        const manage = document.getElementById('manageConnection'); if (manage) manage.textContent = ok ? '管理题库连接' : '连接题库文件夹';
-        ['backupAction','restoreAction','integrityAction'].forEach(id => { const b=document.getElementById(id); if (b) { b.disabled=!ok; b.title=ok?'':'请先连接题库。'; }}); const note=document.getElementById('safetyDisabledNote'); if(note) note.hidden=ok;
-        updateTaskPanel();
-      };
-      window.updateTaskPanel = () => { const panel=document.getElementById('taskPanel'), kind=AppState.activeTask; if(!panel)return; panel.hidden=!kind; if(!kind)return; text('taskName',`正在${taskLabel(kind)}`); const cancel=document.getElementById('cancelTask'); cancel.textContent=`取消${taskLabel(kind)}`; cancel.disabled=false; };
-      window.renderTask = p => { updateTaskPanel(); if(!p)return; text('taskName',p.stage || `正在${taskLabel(AppState.activeTask)}`); text('taskStatus',`${p.done||0}/${p.total||0}${p.name?' · '+p.name:''} · ${formatBytes(p.bytes||0)} / ${formatBytes(p.totalBytes||0)}`); const bar=document.getElementById('taskProgressBar'); if(bar)bar.style.width=`${p.total?Math.min(100,(p.done/p.total)*100):0}%`; };
-      const modal = () => document.querySelector('#modalBackdrop .modal');
-      const clearChoices = () => { document.getElementById('dataModalChoices')?.remove(); };
-      const openChoices = (title, description, choices) => { clearChoices(); DialogManager.open({title,text:description,onConfirm:()=>{clearChoices();choices[0].onClick()}}); const confirm=document.getElementById('confirm'); confirm.textContent=choices[0].label; confirm.className='btn brand-btn'; const list=document.createElement('div'); list.id='dataModalChoices'; list.className='choice-list'; choices.slice(1).forEach(c=>{const b=document.createElement('button');b.type='button';b.className='btn secondary';b.innerHTML=`${c.label}<small>${c.description||''}</small>`;b.onclick=()=>{DialogManager.close();clearChoices();c.onClick()};list.append(b)}); modal()?.querySelector('#modalText')?.after(list); document.getElementById('cancel').onclick=()=>{DialogManager.close();clearChoices()}; };
-      async function reconnectCurrent(){ const h=AppState.repository?.handle || window.lastLibrary?.handle; if(!h)return connect(); try{setConnectionStatus('connecting'); const p=await h.queryPermission({mode:'readwrite'}); const granted=p==='granted'||(p==='prompt'&&await h.requestPermission({mode:'readwrite'})==='granted'); if(!granted)throw fail('NotAllowedError','文件夹权限被拒绝'); FS.handle=h; const repo=await new Repo(h).load(); AppState.repository=repo; AppState.qr=new QuestionRepository(repo); AppState.lastConnectedAt=Date.now(); setConnectionStatus('connected'); updateDataPage(); Toast.show('题库已重新连接'); }catch(e){setConnectionStatus(e.name==='NotAllowedError'?'permission-denied':'error');Toast.show(`重新连接失败：${e.message}`,'error');} }
-      function openConnection(){ const ok=connected(), h=AppState.repository?.handle || window.lastLibrary?.handle, name=h?.name || '尚未连接题库'; if(!h&&!ok)return connect(); const permission=h?.queryPermission ? '正在读取…' : '无法读取'; openChoices('管理题库连接',`当前题库：\n“${ok?AppState.repository.handle.name:name}”\n\n当前权限：${permission}`,[{label:'重新连接当前题库',onClick:reconnectCurrent},{label:'选择其他题库文件夹',description:'选择后会校验 app.json 和 questions 文件，不会覆盖原题库。',onClick:connect}]); if(h?.queryPermission)h.queryPermission({mode:'readwrite'}).then(p=>text('modalText',`当前题库：\n“${name}”\n\n当前权限：${permissionLabel(p)}`)).catch(()=>{}); }
-      function openIntegrity(){ if(!connected())return Toast.show('请先连接题库','warning'); openChoices('检查数据完整性','请选择检查方式。',[{label:'快速检查',onClick:()=>checkIntegrity(false)},{label:'深度检查',description:'在快速检查基础上逐张尝试解码图片，耗时可能较长。',onClick:()=>checkIntegrity(true)}]); const list=document.getElementById('dataModalChoices'); if(list)list.insertAdjacentHTML('afterbegin','<p class="note">快速检查 JSON、题目结构、图片是否存在和文件大小，不逐张解码图片。</p>'); }
-      document.getElementById('manageConnection').onclick=openConnection; document.getElementById('backupAction').onclick=backup; document.getElementById('restoreAction').onclick=restore; document.getElementById('integrityAction').onclick=openIntegrity; document.getElementById('cancelTask').onclick=()=>{if(AppState.activeTask){DataTaskManager.cancel();Toast.show(`已请求取消${taskLabel(AppState.activeTask)}，当前文件完成后停止`,'warning')}};
-      const oldRenderData=window.renderData; window.renderData=(...args)=>{const r=oldRenderData?.(...args);updateDataPage();return r}; const oldSet=setConnectionStatus; setConnectionStatus=(s)=>{oldSet(s);updateDataPage()}; updateDataPage();
-    })();
-  </script>
-  <script>
-    (() => {
-      const baseStatus = setConnectionStatus;
-      setConnectionStatus = status => {
-        baseStatus(status);
-        document.querySelectorAll('[data-route]').forEach(button => { button.disabled = false; button.hidden = false; });
-        renderUnconnectedHome();
-      };
-      const baseRoute = route;
-      route = view => {
-        if (AppState.pendingRoute === 'capture' && view === 'home' && AppState.connectionStatus === 'connected') {
-          AppState.pendingRoute = null;
-          baseRoute('capture');
-        } else if (view === 'home' && AppState.connectionStatus !== 'connected') {
-          AppState.view = 'home';
-          document.querySelectorAll('.view').forEach(item => item.classList.toggle('active', item.dataset.view === 'home'));
-          document.querySelectorAll('[data-route]').forEach(item => {
-            const active = item.dataset.route === 'home';
-            item.classList.toggle('active', active);
-            if (active) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
-          });
-        } else {
-          baseRoute(view);
-        }
-        renderUnconnectedHome();
-        document.querySelector('[data-view="' + AppState.view + '"] h1,[data-view="' + AppState.view + '"] h2')?.focus?.();
-      };
-      function renderUnconnectedHome() {
-        const state = AppState.connectionStatus;
-        const heroButton = document.querySelector('[data-view="home"] .section-head button');
-        const focusButton = document.querySelector('[data-view="home"] .review-card button');
-        if (state === 'connected') {
-          if (heroButton) heroButton.textContent = '开始复习';
-          if (focusButton) focusButton.textContent = '进入复习';
-          return;
-        }
-        const failed = state === 'error' || state === 'permission-denied';
-        const last = window.lastLibrary?.name || AppState.lastLibrary?.name || '';
-        const set = (id, value) => { const item = document.getElementById(id); if (item) item.textContent = value; };
-        set('homeDue', '—');
-        set('homeTotal', '—');
-        set('homeBytes', '—');
-        set('homeConnected', failed ? '连接失败' : state === 'connecting' ? '正在连接' : '未连接');
-        set('homeBackup', failed ? '无法访问上次打开的题库' : '尚未连接');
-        set('homeHeadline', state === 'connecting' ? '正在连接题库' : '题库暂未连接');
-        set('homeSummary', state === 'connecting' ? '正在连接本地题库，请稍候。' : '重新连接本地题库后，即可继续录入和复习。');
-        set('focusSummary', state === 'connecting' ? '正在连接题库，请稍候。' : '重新连接本地题库后，即可开始录入和复习。');
-        set('homeFolder', last ? '上次题库：' + last : '尚未连接题库');
-        set('homeConnectionHint', failed ? '请重新连接或选择其他题库文件夹' : '请选择一个本地题库文件夹');
-        if (heroButton) { heroButton.textContent = failed ? '连接上次打开的题库' : state === 'connecting' ? '正在连接' : '连接上次打开的题库'; heroButton.dataset.route = 'review'; heroButton.disabled = state === 'connecting'; }
-        if (focusButton) { focusButton.textContent = state === 'connecting' ? '正在连接' : '连接题库后开始复习'; focusButton.dataset.route = 'review'; focusButton.disabled = state === 'connecting'; }
-      }
-      const baseStartReview = startReview;
-      startReview = async () => {
-        if (AppState.connectionStatus !== 'connected' || !AppState.repository) {
-          window.openReviewConnectionDialog?.();
-          return;
-        }
-        return baseStartReview();
-      };
-      window.renderUnconnectedHome = renderUnconnectedHome;
-      renderUnconnectedHome();
-    })();
-  </script>
 </html>
