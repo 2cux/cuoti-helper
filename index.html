@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/logo-icon.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="assets/logo-icon.png">
+  <meta name="theme-color" content="#07392d">
   <title>错题重做 · 本地错题复习系统</title>
   <style>
     :root{--bg:#f3f6f4;--surface:#fff;--soft:#e9efec;--green-soft:#e2f1eb;--ink:#111514;--text:#252a28;--muted:#59635e;--subtle:#737d78;--brand:#078d6d;--brand-dark:#07392d;--action:#d94b36;--action-hover:#c43e2b;--warning:#b67b1e;--error:#a43d30;--border:rgba(17,21,20,.12);--border-strong:rgba(17,21,20,.24);--shadow:0 1px 2px rgba(17,21,20,.03),0 6px 18px rgba(17,21,20,.035);font-family:"Microsoft YaHei UI","Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;color:var(--text);color-scheme:light}
@@ -24,11 +27,15 @@
     @media(max-width:900px){.data-overview .stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:767px){.data-grid{grid-template-columns:1fr}.data-overview .stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.task-head{align-items:flex-start;flex-direction:column}.task-head .btn{width:100%}}
   </style>
+  <style>
+    .brand-mark{width:40px;height:40px;border-radius:12px;overflow:hidden;background:transparent}
+    .brand-mark img{display:block;width:40px;height:40px;object-fit:cover}
+  </style>
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="#" data-route="home" aria-label="错题重做首页"><span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5.5h14M5 10h9M5 14.5h14M5 19h7"/><path d="m16 9 2 2 3-4"/></svg></span><span>错题重做</span></a>
+      <a class="brand" href="#" data-route="home" aria-label="错题重做首页"><span class="brand-mark"><img src="assets/logo-icon.png" alt="" aria-hidden="true"></span><span>错题重做</span></a>
       <nav class="desktop-nav" aria-label="主导航"><button class="nav-link" data-route="home" hidden>首页</button><button class="nav-link" data-route="capture" hidden>录入错题</button><button class="nav-link" data-route="review" hidden>开始复习</button><button class="nav-link" data-route="data" hidden>数据管理</button></nav>
       <div class="connection disconnected" id="connection"><span class="dot" aria-hidden="true"></span><span class="label">本地离线运行 · 尚未连接题库</span></div>
       <button class="menu" id="menu" type="button" aria-label="打开菜单" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -135,7 +142,7 @@
     */
     'use strict';
     const $=id=>document.getElementById(id),now=()=>Date.now(),APP_ID='local-mistake-review',DATA_VERSION=1;
-     const AppState={view:'initialization',connectionStatus:'disconnected',connectionAttemptId:0,hasBootstrapped:false,question:[],answer:[],repository:null,qr:null,reviewSession:null,activePasteTarget:null,queue:[],processing:false,saving:false,dirty:false,urls:new Set(),activeTask:null,taskCancel:false};window.AppState=AppState;
+     const AppState={view:'initialization',connectionStatus:'disconnected',connectionAttemptId:0,hasBootstrapped:false,question:[],answer:[],repository:null,qr:null,reviewSession:null,reviewState:{emptyReason:null},activePasteTarget:null,queue:[],processing:false,saving:false,dirty:false,urls:new Set(),activeTask:null,taskCancel:false};window.AppState=AppState;
     const Toast={show(t,type='success'){const e=document.createElement('div');e.className='toast '+type;e.textContent=t;$('toasts').append(e);setTimeout(()=>e.remove(),3800)}};
     const fail=(name,message)=>Object.assign(new Error(message),{name});
     const formatBytes=n=>{if(!Number.isFinite(n)||n<0)return '0 B';if(n<1024)return `${n} B`;const u=['KB','MB','GB','TB'];let i=-1,v=n;do{v/=1024;i++}while(v>=1024&&i<u.length-1);return `${v.toFixed(v>=100||i===0?0:1)} ${u[i]}`};
@@ -188,6 +195,32 @@
       resultPatch(question,result,at=Date.now()){if(result==='hidden')return{hidden:true,lastReviewedAt:at,lastResult:question.lastResult,nextReviewAt:question.nextReviewAt};if(result==='correct'){const streak=Math.max(0,Number(question.correctStreak)||0)+1;const days=REVIEW_INTERVAL_DAYS[Math.min(streak-1,4)];return{correctStreak:streak,lastResult:'correct',lastReviewedAt:at,nextReviewAt:at+days*86400000};}return{correctStreak:0,lastResult:'wrong',lastReviewedAt:at,nextReviewAt:at+86400000};},
       applyResult(question,result,at=Date.now()){return this.resultPatch(question,result,at);}
     };
+    const ReviewScheduler=ReviewEngine;
+    ReviewScheduler.getDueQuestions=(...args)=>ReviewEngine.dueQuestions(...args);
+    ReviewScheduler.getNextQuestion=(...args)=>ReviewEngine.next(...args);
+    window.ReviewScheduler=ReviewScheduler;
+    const REVIEW_EMPTY_REASONS=new Set([null,'empty-library','no-due-questions','session-complete']);
+    function setReviewEmptyReason(reason){
+      if(!REVIEW_EMPTY_REASONS.has(reason))return;
+      if(!AppState.reviewState)AppState.reviewState={emptyReason:null};
+      AppState.reviewState.emptyReason=reason;
+    }
+    function isPermissionError(error){return ['NotAllowedError','SecurityError'].includes(error?.name);}
+    function isDirectoryAccessError(error){return ['FileNotFoundError','SyntaxError','CorruptedDataError','InvalidAppError','NotSupportedError','HandleMissingError','HandleDeserializeError'].includes(error?.name);}
+    function reportReviewConnectionError(error,reason='review-load-failed'){
+      if(!isPermissionError(error)&&!isDirectoryAccessError(error))return false;
+      return window.LibraryConnectionManager?.fail?.(AppState.connectionAttemptId,error,reason)===true;
+    }
+    const reviewNext=ReviewEngine.next.bind(ReviewEngine);
+    ReviewEngine.next=function(repository,session,...rest){
+      const question=reviewNext(repository,session,...rest);
+      const questions=repository?.current?.questions||[];
+      if(question)setReviewEmptyReason(null);
+      else if(questions.length===0)setReviewEmptyReason('empty-library');
+      else if(session?.completed&&Number(session?.completedCount||session?.done||0)>0)setReviewEmptyReason('session-complete');
+      else setReviewEmptyReason('no-due-questions');
+      return question;
+    };
     const ReviewSessionManager={key:'local-mistake-review.session',load(){try{const raw=sessionStorage.getItem(this.key);if(!raw)return null;const s=JSON.parse(raw);if(!s||typeof s.sessionId!=='string'||!Array.isArray(s.seenQuestionIds))return null;return s;}catch{return null;}},save(s){try{sessionStorage.setItem(this.key,JSON.stringify({sessionId:s.sessionId,startedAt:s.startedAt,seenQuestionIds:[...s.seenQuestionIds],completedCount:s.completedCount,currentQuestionId:s.currentQuestionId}));}catch{}},create(revision){return{sessionId:`review_${Date.now()}_${Math.random().toString(36).slice(2)}`,startedAt:Date.now(),seenQuestionIds:new Set(),completedCount:0,currentQuestionId:null,revision};},end(){try{sessionStorage.removeItem(this.key);}catch{}}};
     /* REVIEW_ENGINE_END */
     (function(){
@@ -201,9 +234,9 @@
       const clearImages=releaseCurrentQuestionResources;
       function placeholder(target,text){target.textContent=text;target.style.display='grid';}
       async function loadImages(question,kind,target){target.replaceChildren();const images=(question?.[kind]||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0));if(!images.length){placeholder(target,kind==='questionImages'?'暂无题目图片':'暂无答案图片');return;}let box,failed=0;try{box=await FolderManager.handle.getDirectoryHandle('images');}catch(e){placeholder(target,'图片文件夹无法读取');throw e;}for(const meta of images){try{const file=await(await box.getFileHandle(meta.fileName)).getFile();const url=URL.createObjectURL(file);currentImageUrls.push(url);const img=document.createElement('img');img.src=url;img.alt=kind==='questionImages'?'题目图片':'答案图片';img.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:inherit;margin:8px 0';target.append(img);}catch(e){failed++;const missing=document.createElement('div');missing.textContent='图片缺失或读取失败';missing.style.color='var(--muted)';target.append(missing);ToastManager.show('图片读取失败，题目状态未改变','warning');}}if(failed)throw makeError('ImageLoadError','有图片无法读取');}
-      function reviewEmptyState(){const questions=AppState.qr?.all?.()||[];const session=AppState.reviewSession;const completed=Number(session?.completedCount||session?.done||0);if(!questions.length)return{title:'还没有录入错题',description:'先收录一道题目和答案，系统会将它加入随机复习。',count:'',announcement:''};if(completed>0)return{title:'本次复习已完成',description:`本次共完成 ${completed} 道题，当前没有其他需要复习的题目。`,count:'',announcement:'本次复习已完成'};return{title:'当前没有到期题目',description:'题目将在到达下次复习时间后重新出现。',count:'',announcement:'当前没有到期题目'};}
-      function showReviewEmptyState(){const state=reviewEmptyState();questionCard.hidden=true;emptyCard.hidden=false;emptyTitle.textContent=state.title;emptyDescription.textContent=state.description;emptyCount.hidden=!state.count;emptyCount.textContent=state.count;emptyCapture.textContent=(AppState.qr?.all?.()||[]).length?'录入新错题':'录入第一道错题';emptyTitle.setAttribute('aria-live','polite');requestAnimationFrame(()=>emptyTitle.focus());}
-      function hideReviewEmptyState(){questionCard.hidden=false;emptyCard.hidden=true;}
+      function reviewEmptyState(){const questions=AppState.qr?.all?.()||[];const session=AppState.reviewSession;const completed=Number(session?.completedCount||session?.done||0);if(!questions.length)return{reason:'empty-library',title:'还没有录入错题',description:'先收录一道题目和答案，系统会将它加入随机复习。',count:'',announcement:''};if(completed>0)return{reason:'session-complete',title:'本次复习已完成',description:`本次共完成 ${completed} 道题，当前没有其他需要复习的题目。`,count:'',announcement:'本次复习已完成'};return{reason:'no-due-questions',title:'当前没有到期题目',description:'题目将在到达下次复习时间后重新出现。',count:'',announcement:'当前没有到期题目'};}
+      function showReviewEmptyState(){const state=reviewEmptyState();setReviewEmptyReason(state.reason);questionCard.hidden=true;emptyCard.hidden=false;emptyTitle.textContent=state.title;emptyDescription.textContent=state.description;emptyCount.hidden=!state.count;emptyCount.textContent=state.count;emptyCapture.textContent=(AppState.qr?.all?.()||[]).length?'录入新错题':'录入第一道错题';emptyTitle.setAttribute('aria-live','polite');requestAnimationFrame(()=>emptyTitle.focus());}
+      function hideReviewEmptyState(){setReviewEmptyReason(null);questionCard.hidden=false;emptyCard.hidden=true;}
       function endReview(nextRoute='home'){releaseCurrentQuestionResources();answerVisible=false;if(AppState.reviewSession){AppState.reviewSession.currentId=null;AppState.reviewSession.currentQuestionId=null;}ReviewSessionManager.end();AppState.reviewSession=null;renderStats();Router.go(nextRoute);}
       async function handleReviewReturnHome(){
         if(AppState.reviewSession?.isSubmittingResult||AppState.saving){Toast.show('正在保存当前结果，请稍候','warning');return;}
@@ -280,7 +313,7 @@
           render();
           Router.go('capture');
           document.querySelector('[data-view="capture"] h1,[data-view="capture"] .paste')?.focus?.();
-        }catch(e){AppState.pendingRoute=null;setConnectionStatus(e.name==='NotAllowedError'?'permission-denied':'error');ErrorManager.show(e,'无法打开录入页面，当前题库数据没有被修改。');}
+        }catch(e){AppState.pendingRoute=null;reportReviewConnectionError(e,'review-capture-open-failed');ErrorManager.show(e,'无法打开录入页面，当前题库数据没有被修改。');}
       }
       window.handleReviewReturnHome=handleReviewReturnHome;
       window.handleReviewOpenCapture=handleReviewOpenCapture;
@@ -288,9 +321,9 @@
       function currentQuestion(){return AppState.reviewSession?.currentId?AppState.qr.getQuestionById(AppState.reviewSession.currentId):null;}
       async function renderQuestion(q){releaseCurrentQuestionResources();answerVisible=false;hideReviewEmptyState();answer.classList.remove('open');showAnswer.hidden=false;showAnswer.disabled=true;right.disabled=wrong.disabled=hide.disabled=true;questionImage.setAttribute('aria-label','题目图片');if(!q){showReviewEmptyState();return;}placeholder(questionImage,'正在加载题目图片');try{await loadImages(q,'questionImages',questionImage);showAnswer.disabled=false;}catch(e){placeholder(questionImage,'题目图片加载失败，可结束复习或重试加载');}}
       async function startReview(){
-        if(AppState.connectionStatus!=='connected'||!AppState.repository){ToastManager.show('请先连接可读写的数据文件夹','warning');return;}
+        if(AppState.connectionStatus!=='connected'||AppState.repository==null||AppState.repository.handle==null||!Array.isArray(AppState.qr?.all?.())){window.openReviewConnectionDialog?.();return;}
         try{if(await FolderManager.permission(AppState.repository.handle,true)!=='granted')throw makeError('NotAllowedError','当前没有可读写文件夹权限');await AppState.repository.refresh();AppState.qr=new QuestionRepository(AppState.repository);let saved=ReviewSessionManager.load();let session=saved&&saved.revision===AppState.repository.current.revision?saved:null;if(!session)session=ReviewSessionManager.create(AppState.repository.current.revision);session.seenIds=new Set(session.seenQuestionIds||[]);session.done=session.completedCount||0;session.completed=false;session.currentId=session.currentQuestionId||null;AppState.reviewSession=session;let q=session.currentId?AppState.qr.getQuestionById(session.currentId):null;if(!q||q.hidden!==false||!Number.isFinite(q.nextReviewAt)||q.nextReviewAt>Date.now())q=ReviewEngine.next(AppState.repository,session);session.currentId=q?.id||null;session.currentQuestionId=session.currentId;ReviewSessionManager.save({...session,seenQuestionIds:session.seenIds});done.textContent=session.done;Router.go('review');await renderQuestion(q);if(!q)ToastManager.show('本次没有可复习题目','warning');}
-        catch(e){setConnectionStatus(e.name==='NotAllowedError'?'permission-denied':'error');ErrorManager.show(e,'开始复习失败');}
+        catch(e){reportReviewConnectionError(e,'review-start-failed');ErrorManager.show(e,'开始复习失败');}
       }
       async function persistResult(result){
         const q=currentQuestion();if(!q||AppState.reviewSession.isSubmittingResult)return;AppState.reviewSession.isSubmittingResult=true;right.disabled=wrong.disabled=hide.disabled=true;const snapshot=structuredClone(q);const patch=ReviewEngine.applyResult(q,result);try{await FolderManager.requireWrite();AppState.qr.updateQuestionMetadata(q.id,patch);await SafeWriter.save(AppState.repository);await AppState.repository.refresh();AppState.qr=new QuestionRepository(AppState.repository);AppState.reviewSession.done++;AppState.reviewSession.completedCount=AppState.reviewSession.done;AppState.reviewSession.currentId=null;AppState.reviewSession.currentQuestionId=null;done.textContent=AppState.reviewSession.done;ReviewSessionManager.save({...AppState.reviewSession,seenQuestionIds:AppState.reviewSession.seenIds});renderStats();const next=ReviewEngine.next(AppState.repository,AppState.reviewSession);AppState.reviewSession.currentQuestionId=next?.id||null;ReviewSessionManager.save({...AppState.reviewSession,seenQuestionIds:AppState.reviewSession.seenIds});await renderQuestion(next);if(next)ToastManager.show(result==='correct'?'答对了，继续保持':'已记录本次结果');else ToastManager.show('本次复习已完成');}
@@ -342,7 +375,7 @@
       };
 
       Object.assign(FolderManager, {
-        db: 'mistake-review-folders', store: 'handles', key: 'current', handle: null,
+        db: 'mistake-review-folders', store: 'handles', key: 'current',
         async save(handle) {
           this.handle = handle;
           return new Promise((resolve, reject) => {
@@ -512,7 +545,7 @@
       const when=value=>{if(!Number.isFinite(value))return '本次连接';const diff=Math.max(0,Date.now()-value),m=60000,h=60*m,d=24*h;if(diff<m)return '刚刚';if(diff<h)return `${Math.floor(diff/m)} 分钟前`;if(diff<d)return `${Math.floor(diff/h)} 小时前`;const date=new Date(value),today=new Date();return date.toDateString()===today.toDateString()?'今天':date.toISOString().slice(0,10)};
       const backup=value=>Number.isFinite(value)?new Date(value).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}):'尚未备份';
       function getHomeDashboardData(){const s=window.AppState,connected=s?.connectionStatus==='connected',questions=connected?(s.qr?.all?.()||[]):[],images=questions.flatMap(q=>(Array.isArray(q.questionImages)?q.questionImages:[]).concat(Array.isArray(q.answerImages)?q.answerImages:[]));let savedAt=s?.lastConnectedAt;try{savedAt=savedAt||Number(localStorage.getItem('local-mistake-review.last-connected-at'))||null}catch{}return{totalCount:connected?questions.length:null,activeCount:connected?questions.filter(q=>q.hidden===false).length:null,hiddenCount:connected?questions.filter(q=>q.hidden===true).length:null,dueCount:connected?questions.filter(q=>q.hidden===false&&Number.isFinite(q.nextReviewAt)&&q.nextReviewAt<=Date.now()).length:null,imageCount:connected?images.length:null,registeredByteSize:connected?images.reduce((n,x)=>n+(Number.isFinite(x.byteSize)?x.byteSize:0),0):null,lastBackupAt:connected?s.repository?.app?.lastBackupAt??null:null,lastConnectedAt:connected?(s.lastConnectedAt??(s.lastConnectedAt=savedAt||Date.now())):null,folderName:connected?(s.repository?.handle?.name??'尚未连接题库'):'尚未连接题库',connectionStatus:s?.connectionStatus||'disconnected'}}
-      function renderHomeDashboard(){const d=getHomeDashboardData(),ok=d.connectionStatus==='connected',empty=ok&&d.totalCount===0,due=ok&&d.dueCount>0;set('homeDue',ok?d.dueCount.toLocaleString():'—');set('homeTotal',ok?d.totalCount.toLocaleString():'—');set('homeBytes',ok?formatBytes(d.registeredByteSize):'—');set('homeConnected',ok?when(d.lastConnectedAt):'未连接');set('homeBackup',ok?`最近备份：${backup(d.lastBackupAt)}`:'未连接');set('homeFolder',d.folderName);set('homeConnectionHint',ok?'连接状态由当前应用状态统一管理':'请先连接题库');set('dataTotal',ok?d.totalCount.toLocaleString():'0');set('dataActive',ok?d.activeCount.toLocaleString():'0');set('dataHidden',ok?d.hiddenCount.toLocaleString():'0');set('dataImages',ok?d.imageCount.toLocaleString():'0');set('dataBytes',ok?formatBytes(d.registeredByteSize):'0 B');set('dataFolder',d.folderName);set('dataUpdated',ok?`最近备份：${backup(d.lastBackupAt)}`:'尚未备份');set('homeHeadline',!ok?'连接题库后查看复习':empty?'还没有收录错题':due?'今天复习什么？':'今天的复习已经完成');set('homeSummary',!ok?'请先连接题库。':empty?'先录入一道题目和答案，系统会将它加入随机复习。':due?`当前有 ${d.dueCount} 道题需要复习，系统会按照到期时间和答题情况随机抽取。`:'当前没有到期题目。到达下次复习时间后，系统会再次展示。');set('focusSummary',!ok?'连接题库后开始复习。':empty?'先录入第一道错题，开始建立你的复习库。':due?`今天先完成 ${d.dueCount} 道到期错题，保持稳定的复习节奏。`:'当前没有到期题目，先录入新错题吧。');const main=document.getElementById('homeReviewButton');if(main){main.textContent=empty?'录入第一道错题':due?'开始复习':'录入新错题';main.dataset.route=empty?'capture':due?'review':'capture';main.disabled=!ok}const focus=document.getElementById('focusReviewButton');if(focus)focus.disabled=!ok||empty;document.querySelectorAll('[data-route="capture"]').forEach(b=>b.disabled=!ok);return d}
+      function renderHomeDashboard(){const d=getHomeDashboardData(),ok=d.connectionStatus==='connected',empty=ok&&d.totalCount===0,due=ok&&d.dueCount>0;set('homeDue',ok?d.dueCount.toLocaleString():'—');set('homeTotal',ok?d.totalCount.toLocaleString():'—');set('homeBytes',ok?formatBytes(d.registeredByteSize):'—');set('homeConnected',ok?when(d.lastConnectedAt):'未连接');set('homeBackup',ok?`最近备份：${backup(d.lastBackupAt)}`:'未连接');set('homeFolder',d.folderName);set('homeConnectionHint',ok?'连接状态由当前应用状态统一管理':'请先连接题库');set('dataTotal',ok?d.totalCount.toLocaleString():'—');set('dataActive',ok?d.activeCount.toLocaleString():'—');set('dataHidden',ok?d.hiddenCount.toLocaleString():'—');set('dataImages',ok?d.imageCount.toLocaleString():'—');set('dataBytes',ok?formatBytes(d.registeredByteSize):'—');set('dataFolder',d.folderName);set('dataUpdated',ok?`最近备份：${backup(d.lastBackupAt)}`:'尚未备份');set('homeHeadline',!ok?'连接题库后查看复习':empty?'还没有收录错题':due?'今天复习什么？':'今天的复习已经完成');set('homeSummary',!ok?'请先连接题库。':empty?'先录入一道题目和答案，系统会将它加入随机复习。':due?`当前有 ${d.dueCount} 道题需要复习，系统会按照到期时间和答题情况随机抽取。`:'当前没有到期题目。到达下次复习时间后，系统会再次展示。');set('focusSummary',!ok?'连接题库后开始复习。':empty?'先录入第一道错题，开始建立你的复习库。':due?`今天先完成 ${d.dueCount} 道到期错题，保持稳定的复习节奏。`:'当前没有到期题目，先录入新错题吧。');const main=document.getElementById('homeReviewButton');if(main){main.textContent='开始复习';main.dataset.route='review';main.disabled=!ok}const focus=document.getElementById('focusReviewButton');if(focus){focus.textContent='进入复习';focus.dataset.route='review';focus.disabled=!ok;}document.querySelectorAll('[data-route="capture"]').forEach(b=>b.disabled=!ok);return d}
       window.getHomeDashboardData=getHomeDashboardData;window.refreshRealStats=renderHomeDashboard;window.renderStats=renderHomeDashboard;const previousRenderData=window.renderData;window.renderData=function(...args){const result=previousRenderData?.(...args);renderHomeDashboard();return result};const previousRoute=route;route=function(value){const result=previousRoute(value);renderHomeDashboard();return result};window.addEventListener('load',renderHomeDashboard);document.addEventListener('click',e=>{if(e.target.closest('[data-route="home"]'))setTimeout(renderHomeDashboard,0)});renderHomeDashboard();
     })();
   </script>
@@ -755,14 +788,16 @@
         if (heroButton) { heroButton.textContent = failed ? '连接上次打开的题库' : state === 'connecting' ? '正在连接' : '连接上次打开的题库'; heroButton.dataset.route = 'review'; heroButton.disabled = state === 'connecting'; }
         if (focusButton) { focusButton.textContent = state === 'connecting' ? '正在连接' : '连接题库后开始复习'; focusButton.dataset.route = 'review'; focusButton.disabled = state === 'connecting'; }
       }
-      const baseStartReview = startReview;
-      startReview = async () => {
-        if (AppState.connectionStatus !== 'connected' || !AppState.repository) {
-          window.openReviewConnectionDialog?.();
-          return;
-        }
-        return baseStartReview();
-      };
+      if (typeof startReview === 'function') {
+        const baseStartReview = startReview;
+        startReview = async () => {
+          if (AppState.connectionStatus !== 'connected' || !AppState.repository) {
+            window.openReviewConnectionDialog?.();
+            return;
+          }
+          return baseStartReview();
+        };
+      }
       window.renderUnconnectedHome = renderUnconnectedHome;
       renderUnconnectedHome();
     })();
@@ -811,6 +846,47 @@
         state.hasBootstrapped = true;
         return init?.();
       });
+    })();
+  </script>
+  <script>
+    (() => {
+      const syncReviewEntryButtons = () => {
+        const connected = AppState.connectionStatus === 'connected' && AppState.repository != null && AppState.repository.handle != null && Array.isArray(AppState.qr?.all?.());
+        if (!connected) return;
+        const main = document.getElementById('homeReviewButton');
+        const focus = document.getElementById('focusReviewButton');
+        if (main) {
+          main.dataset.route = 'review';
+          main.textContent = '开始复习';
+          main.disabled = false;
+        }
+        if (focus) {
+          focus.dataset.route = 'review';
+          focus.textContent = '进入复习';
+          focus.disabled = false;
+        }
+      };
+
+      const baseStatus = setConnectionStatus;
+      setConnectionStatus = function(status, ...args) {
+        const result = baseStatus(status, ...args);
+        syncReviewEntryButtons();
+        return result;
+      };
+      const baseRoute = route;
+      route = function(view, ...args) {
+        const result = baseRoute(view, ...args);
+        syncReviewEntryButtons();
+        return result;
+      };
+      const baseRefresh = window.refreshRealStats;
+      window.refreshRealStats = (...args) => {
+        const result = baseRefresh?.(...args);
+        syncReviewEntryButtons();
+        return result;
+      };
+      window.handleStartReview = () => document.querySelector('[data-view="home"] [data-route="review"]')?.click();
+      syncReviewEntryButtons();
     })();
   </script>
 </html>
