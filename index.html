@@ -144,6 +144,8 @@
     const $=id=>document.getElementById(id),now=()=>Date.now(),APP_ID='local-mistake-review',DATA_VERSION=1;
      const AppState={view:'initialization',connectionStatus:'disconnected',connectionAttemptId:0,hasBootstrapped:false,question:[],answer:[],repository:null,qr:null,reviewSession:null,reviewState:{emptyReason:null},activePasteTarget:null,queue:[],processing:false,saving:false,dirty:false,urls:new Set(),activeTask:null,taskCancel:false};window.AppState=AppState;
     const Toast={show(t,type='success'){const e=document.createElement('div');e.className='toast '+type;e.textContent=t;$('toasts').append(e);setTimeout(()=>e.remove(),3800)}};
+    function showToast(message,type='success'){Toast.show(message,type)}
+    function notifySafely(message,type='success'){try{showToast(message,type)}catch(error){console.error('Toast notification failed',error)}}
     const fail=(name,message)=>Object.assign(new Error(message),{name});
     const formatBytes=n=>{if(!Number.isFinite(n)||n<0)return '0 B';if(n<1024)return `${n} B`;const u=['KB','MB','GB','TB'];let i=-1,v=n;do{v/=1024;i++}while(v>=1024&&i<u.length-1);return `${v.toFixed(v>=100||i===0?0:1)} ${u[i]}`};
     const yieldToMain=()=>new Promise(r=>setTimeout(r,0));
@@ -191,8 +193,8 @@
       weight(q,at=Date.now()){const timestamp=Number(q.nextReviewAt);const overdueDays=Number.isFinite(timestamp)?Math.max(0,(at-timestamp)/86400000):0;const overdueFactor=1+Math.min(overdueDays,REVIEW_WEIGHT_CONFIG.maximumOverdueDays)*REVIEW_WEIGHT_CONFIG.overdueDailyIncrease;const wrongFactor=q.lastResult==='wrong'?REVIEW_WEIGHT_CONFIG.wrongMultiplier:1;const newFactor=q.lastReviewedAt===null?REVIEW_WEIGHT_CONFIG.newQuestionMultiplier:1;return Math.min(REVIEW_WEIGHT_CONFIG.maximumWeight,Math.max(REVIEW_WEIGHT_CONFIG.minimumWeight,overdueFactor*wrongFactor*newFactor));},
       pickWeighted(items,random=Math.random,at=Date.now()){if(!items.length)return null;const total=items.reduce((sum,q)=>sum+this.weight(q,at),0);let cursor=random()*total;for(const q of items){cursor-=this.weight(q,at);if(cursor<0)return q;}return items[items.length-1];},
       createSession(repository,oldSession=null){const revision=repository.current?.revision||0;if(oldSession&&oldSession.revision===revision&&!oldSession.completed)return oldSession;return{revision,seenIds:new Set(),done:0,currentId:null,completed:false};},
-      next(repository,session,at=Date.now(),random=Math.random){const candidates=this.dueQuestions(repository.current?.questions||[],session.seenIds,at);const q=this.pickWeighted(candidates,random,at);if(!q){session.currentId=null;session.completed=true;return null;}session.currentId=q.id;session.seenIds.add(q.id);return q;},
-      resultPatch(question,result,at=Date.now()){if(result==='hidden')return{hidden:true,lastReviewedAt:at,lastResult:question.lastResult,nextReviewAt:question.nextReviewAt};if(result==='correct'){const streak=Math.max(0,Number(question.correctStreak)||0)+1;const days=REVIEW_INTERVAL_DAYS[Math.min(streak-1,4)];return{correctStreak:streak,lastResult:'correct',lastReviewedAt:at,nextReviewAt:at+days*86400000};}return{correctStreak:0,lastResult:'wrong',lastReviewedAt:at,nextReviewAt:at+86400000};},
+      next(repository,session,at=Date.now(),random=Math.random){const candidates=this.dueQuestions(repository.current?.questions||[],session.seenIds,at);const q=this.pickWeighted(candidates,random,at);if(!q){session.currentId=null;session.completed=true;return null;}session.currentId=q.id;return q;},
+      resultPatch(question,result,at=Date.now()){if(result==='hide')return{hidden:true,lastReviewedAt:at,lastResult:question.lastResult,nextReviewAt:question.nextReviewAt};if(result==='correct'){const streak=Math.max(0,Number(question.correctStreak)||0)+1;const days=REVIEW_INTERVAL_DAYS[Math.min(streak-1,4)];return{correctStreak:streak,lastResult:'correct',lastReviewedAt:at,nextReviewAt:at+days*86400000};}return{correctStreak:0,lastResult:'wrong',lastReviewedAt:at,nextReviewAt:at+86400000};},
       applyResult(question,result,at=Date.now()){return this.resultPatch(question,result,at);}
     };
     const ReviewScheduler=ReviewEngine;
@@ -233,7 +235,7 @@
       function releaseCurrentQuestionResources(){currentImageUrls.forEach(u=>URL.revokeObjectURL(u));currentImageUrls=[];questionImage.replaceChildren();answerImage.replaceChildren();}
       const clearImages=releaseCurrentQuestionResources;
       function placeholder(target,text){target.textContent=text;target.style.display='grid';}
-      async function loadImages(question,kind,target){target.replaceChildren();const images=(question?.[kind]||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0));if(!images.length){placeholder(target,kind==='questionImages'?'暂无题目图片':'暂无答案图片');return;}let box,failed=0;try{box=await FolderManager.handle.getDirectoryHandle('images');}catch(e){placeholder(target,'图片文件夹无法读取');throw e;}for(const meta of images){try{const file=await(await box.getFileHandle(meta.fileName)).getFile();const url=URL.createObjectURL(file);currentImageUrls.push(url);const img=document.createElement('img');img.src=url;img.alt=kind==='questionImages'?'题目图片':'答案图片';img.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:inherit;margin:8px 0';target.append(img);}catch(e){failed++;const missing=document.createElement('div');missing.textContent='图片缺失或读取失败';missing.style.color='var(--muted)';target.append(missing);ToastManager.show('图片读取失败，题目状态未改变','warning');}}if(failed)throw makeError('ImageLoadError','有图片无法读取');}
+      async function loadImages(question,kind,target){target.replaceChildren();const images=(question?.[kind]||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0));if(!images.length){placeholder(target,kind==='questionImages'?'暂无题目图片':'暂无答案图片');return;}let box,failed=0;try{box=await FolderManager.handle.getDirectoryHandle('images');}catch(e){placeholder(target,'图片文件夹无法读取');throw e;}for(const meta of images){try{const file=await(await box.getFileHandle(meta.fileName)).getFile();const url=URL.createObjectURL(file);currentImageUrls.push(url);const img=document.createElement('img');img.src=url;img.alt=kind==='questionImages'?'题目图片':'答案图片';img.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:inherit;margin:8px 0';target.append(img);}catch(e){failed++;const missing=document.createElement('div');missing.textContent='图片缺失或读取失败';missing.style.color='var(--muted)';target.append(missing);notifySafely('图片读取失败，题目状态未改变','warning');}}if(failed)throw makeError('ImageLoadError','有图片无法读取');}
       function reviewEmptyState(){const questions=AppState.qr?.all?.()||[];const session=AppState.reviewSession;const completed=Number(session?.completedCount||session?.done||0);if(!questions.length)return{reason:'empty-library',title:'还没有录入错题',description:'先收录一道题目和答案，系统会将它加入随机复习。',count:'',announcement:''};if(completed>0)return{reason:'session-complete',title:'本次复习已完成',description:`本次共完成 ${completed} 道题，当前没有其他需要复习的题目。`,count:'',announcement:'本次复习已完成'};return{reason:'no-due-questions',title:'当前没有到期题目',description:'题目将在到达下次复习时间后重新出现。',count:'',announcement:'当前没有到期题目'};}
       function showReviewEmptyState(){const state=reviewEmptyState();setReviewEmptyReason(state.reason);questionCard.hidden=true;emptyCard.hidden=false;emptyTitle.textContent=state.title;emptyDescription.textContent=state.description;emptyCount.hidden=!state.count;emptyCount.textContent=state.count;emptyCapture.textContent=(AppState.qr?.all?.()||[]).length?'录入新错题':'录入第一道错题';emptyTitle.setAttribute('aria-live','polite');requestAnimationFrame(()=>emptyTitle.focus());}
       function hideReviewEmptyState(){setReviewEmptyReason(null);questionCard.hidden=false;emptyCard.hidden=true;}
@@ -322,18 +324,47 @@
       async function renderQuestion(q){releaseCurrentQuestionResources();answerVisible=false;hideReviewEmptyState();answer.classList.remove('open');showAnswer.hidden=false;showAnswer.disabled=true;right.disabled=wrong.disabled=hide.disabled=true;questionImage.setAttribute('aria-label','题目图片');if(!q){showReviewEmptyState();return;}placeholder(questionImage,'正在加载题目图片');try{await loadImages(q,'questionImages',questionImage);showAnswer.disabled=false;}catch(e){placeholder(questionImage,'题目图片加载失败，可结束复习或重试加载');}}
       async function startReview(){
         if(AppState.connectionStatus!=='connected'||AppState.repository==null||AppState.repository.handle==null||!Array.isArray(AppState.qr?.all?.())){window.openReviewConnectionDialog?.();return;}
-        try{if(await FolderManager.permission(AppState.repository.handle,true)!=='granted')throw makeError('NotAllowedError','当前没有可读写文件夹权限');await AppState.repository.refresh();AppState.qr=new QuestionRepository(AppState.repository);let saved=ReviewSessionManager.load();let session=saved&&saved.revision===AppState.repository.current.revision?saved:null;if(!session)session=ReviewSessionManager.create(AppState.repository.current.revision);session.seenIds=new Set(session.seenQuestionIds||[]);session.done=session.completedCount||0;session.completed=false;session.currentId=session.currentQuestionId||null;AppState.reviewSession=session;let q=session.currentId?AppState.qr.getQuestionById(session.currentId):null;if(!q||q.hidden!==false||!Number.isFinite(q.nextReviewAt)||q.nextReviewAt>Date.now())q=ReviewEngine.next(AppState.repository,session);session.currentId=q?.id||null;session.currentQuestionId=session.currentId;ReviewSessionManager.save({...session,seenQuestionIds:session.seenIds});done.textContent=session.done;Router.go('review');await renderQuestion(q);if(!q)ToastManager.show('本次没有可复习题目','warning');}
+        try{if(await FolderManager.permission(AppState.repository.handle,true)!=='granted')throw makeError('NotAllowedError','当前没有可读写文件夹权限');await AppState.repository.refresh();AppState.qr=new QuestionRepository(AppState.repository);let saved=ReviewSessionManager.load();let session=saved&&saved.revision===AppState.repository.current.revision?saved:null;if(!session)session=ReviewSessionManager.create(AppState.repository.current.revision);session.seenIds=new Set(session.seenQuestionIds||[]);session.done=session.completedCount||0;session.completed=false;session.currentId=session.currentQuestionId||null;AppState.reviewSession=session;let q=session.currentId?AppState.qr.getQuestionById(session.currentId):null;if(!q||q.hidden!==false||!Number.isFinite(q.nextReviewAt)||q.nextReviewAt>Date.now())q=ReviewEngine.next(AppState.repository,session);session.currentId=q?.id||null;session.currentQuestionId=session.currentId;ReviewSessionManager.save({...session,seenQuestionIds:session.seenIds});done.textContent=session.done;Router.go('review');await renderQuestion(q);if(!q)notifySafely('本次没有可复习题目','warning');}
         catch(e){reportReviewConnectionError(e,'review-start-failed');ErrorManager.show(e,'开始复习失败');}
       }
-      async function persistResult(result){
-        const q=currentQuestion();if(!q||AppState.reviewSession.isSubmittingResult)return;AppState.reviewSession.isSubmittingResult=true;right.disabled=wrong.disabled=hide.disabled=true;const snapshot=structuredClone(q);const patch=ReviewEngine.applyResult(q,result);try{await FolderManager.requireWrite();AppState.qr.updateQuestionMetadata(q.id,patch);await SafeWriter.save(AppState.repository);await AppState.repository.refresh();AppState.qr=new QuestionRepository(AppState.repository);AppState.reviewSession.done++;AppState.reviewSession.completedCount=AppState.reviewSession.done;AppState.reviewSession.currentId=null;AppState.reviewSession.currentQuestionId=null;done.textContent=AppState.reviewSession.done;ReviewSessionManager.save({...AppState.reviewSession,seenQuestionIds:AppState.reviewSession.seenIds});renderStats();const next=ReviewEngine.next(AppState.repository,AppState.reviewSession);AppState.reviewSession.currentQuestionId=next?.id||null;ReviewSessionManager.save({...AppState.reviewSession,seenQuestionIds:AppState.reviewSession.seenIds});await renderQuestion(next);if(next)ToastManager.show(result==='correct'?'答对了，继续保持':'已记录本次结果');else ToastManager.show('本次复习已完成');}
-        catch(e){Object.assign(q,snapshot);try{await AppState.repository.refresh();AppState.qr=new QuestionRepository(AppState.repository);}catch{}right.disabled=wrong.disabled=hide.disabled=false;ErrorManager.show(e,'复习状态保存失败：当前结果尚未保存，可重新提交');}
-        finally{if(AppState.reviewSession)AppState.reviewSession.isSubmittingResult=false;}
+      async function submitReviewResult(result){
+        if(!['correct','wrong','hide'].includes(result))return;
+        const session=AppState.reviewSession,q=currentQuestion();if(!q||!session||session.isSubmittingResult)return;
+        session.isSubmittingResult=true;right.disabled=wrong.disabled=hide.disabled=true;
+        const snapshot=structuredClone(q),patch=ReviewEngine.applyResult(q,result);
+        try{
+          await FolderManager.requireWrite();
+          AppState.qr.updateQuestionMetadata(q.id,patch);
+          await SafeWriter.save(AppState.repository);
+        }catch(e){
+          Object.assign(q,snapshot);
+          right.disabled=wrong.disabled=hide.disabled=false;
+          session.isSubmittingResult=false;
+          try{ErrorManager.show(e,'复习状态保存失败：当前结果尚未保存，可重新提交')}catch(error){console.error('Unable to show save failure',error)}
+          return;
+        }
+        AppState.qr=new QuestionRepository(AppState.repository);
+        session.seenIds.add(q.id);
+        session.done++;
+        session.completedCount=session.done;
+        session.currentId=null;
+        session.currentQuestionId=null;
+        done.textContent=session.done;
+        ReviewSessionManager.save({...session,seenQuestionIds:session.seenIds});
+        releaseCurrentQuestionResources();
+        renderStats();
+        const next=ReviewEngine.next(AppState.repository,session);
+        session.currentQuestionId=next?.id||null;
+        ReviewSessionManager.save({...session,seenQuestionIds:session.seenIds});
+        try{await renderQuestion(next)}catch(error){console.error('Unable to render next review question',error)}
+        session.isSubmittingResult=false;
+        notifySafely(next?(result==='correct'?'答对了，继续保持':'已记录本次结果'):'本次复习已完成');
       }
+      window.submitReviewResult=submitReviewResult;
       document.addEventListener('click',e=>{const route=e.target.closest('[data-route]')?.dataset.route;if(route==='review'){e.preventDefault();e.stopImmediatePropagation();startReview();}},true);
       showAnswer.addEventListener('click',async()=>{const q=currentQuestion();if(!q)return;showAnswer.disabled=true;answer.classList.add('open');answerImage.textContent='正在加载答案';try{await loadImages(q,'answerImages',answerImage);right.disabled=wrong.disabled=hide.disabled=false;showAnswer.textContent='答案已加载';}catch(e){right.disabled=wrong.disabled=hide.disabled=true;showAnswer.disabled=false;showAnswer.textContent='重试加载答案';ErrorManager.show(e,'答案加载失败');}});
-      right.addEventListener('click',()=>persistResult('correct'));wrong.addEventListener('click',()=>persistResult('wrong'));hide.addEventListener('click',()=>{if(AppState.reviewSession?.isSubmittingResult)return;DialogManager.open({title:'确认不再展示',text:'确定不再展示这道题吗？确认后，这道题将永久退出随机复习；图片文件会保留。',onConfirm:()=>persistResult('hidden')});});
-      questionImage.addEventListener('click',()=>{if(currentQuestion()?.questionImages?.length)ToastManager.show('题目图片已按需加载');else ToastManager.show('当前题目没有图片','warning');});
+      right.addEventListener('click',()=>submitReviewResult('correct'));wrong.addEventListener('click',()=>submitReviewResult('wrong'));hide.addEventListener('click',()=>{if(AppState.reviewSession?.isSubmittingResult)return;DialogManager.open({title:'确认不再展示',text:'确定不再展示这道题吗？确认后，这道题将永久退出随机复习；图片文件会保留。',onConfirm:()=>submitReviewResult('hide')});});
+      questionImage.addEventListener('click',()=>{if(currentQuestion()?.questionImages?.length)notifySafely('题目图片已按需加载');else notifySafely('当前题目没有图片','warning');});
       document.querySelector('main').addEventListener('click',event=>{const el=event.target.closest('[data-action]');if(!el)return;event.preventDefault();if(el.dataset.action==='review-return-home')handleReviewReturnHome();if(el.dataset.action==='review-open-capture')handleReviewOpenCapture();});
       document.addEventListener('click',e=>{if(e.target.closest('[data-route="home"]')&&AppState.reviewSession){e.preventDefault();e.stopImmediatePropagation();handleReviewReturnHome();}},true);
       window.addEventListener('pagehide',releaseCurrentQuestionResources);

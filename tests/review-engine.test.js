@@ -4,7 +4,7 @@ const fs = require('node:fs');
 
 const html = fs.readFileSync(require('node:path').join(__dirname, '..', 'index.html'), 'utf8');
 const source = html.match(/\/\* REVIEW_ENGINE_START \*\/(.*?)\/\* REVIEW_ENGINE_END \*\//s)[1];
-const ReviewEngine = Function(`${source}; return ReviewEngine;`)();
+const ReviewEngine = Function('window', 'AppState', `${source}; return ReviewEngine;`)({}, {reviewState:{emptyReason:null}});
 const day = 86400000;
 const base = {id:'q',questionImages:[{fileName:'q.webp'}],answerImages:[{fileName:'a.webp'}],hidden:false,nextReviewAt:1000,lastReviewedAt:1000,correctStreak:0,lastResult:null};
 
@@ -19,6 +19,14 @@ test('correct intervals are 1, 3, 7, 14, 30 days and stay capped', () => {
 test('wrong resets streak and schedules 24 hours later', () => {
   const patch = ReviewEngine.applyResult({...base,correctStreak:4}, 'wrong', 5000);
   assert.deepEqual(patch, {correctStreak:0,lastResult:'wrong',lastReviewedAt:5000,nextReviewAt:5000+day});
+});
+
+test('hide keeps the question and image metadata but marks it hidden', () => {
+  const question = {...base,questionImages:[{fileName:'q.webp'}],answerImages:[{fileName:'a.webp'}]};
+  const patch = ReviewEngine.applyResult(question, 'hide', 5000);
+  assert.equal(patch.hidden, true);
+  assert.deepEqual(question.questionImages, [{fileName:'q.webp'}]);
+  assert.deepEqual(question.answerImages, [{fileName:'a.webp'}]);
 });
 
 test('hidden, future, malformed and seen questions are excluded', () => {
@@ -49,11 +57,14 @@ test('weighted picker handles empty input and deterministic boundaries', () => {
   assert.equal(ReviewEngine.pickWeighted(items, () => 0.999999, 1000).id, 'b');
 });
 
-test('session next marks each selected id once', () => {
+test('session only excludes ids recorded after a successful submission', () => {
   const repository = {current:{revision:1,questions:[{...base,id:'a',nextReviewAt:0},{...base,id:'b',nextReviewAt:0} ]}};
   const session = {revision:1,seenIds:new Set(),done:0,currentId:null,completed:false};
   const first = ReviewEngine.next(repository, session, 100, () => 0);
+  assert.equal(session.seenIds.size, 0);
+  session.seenIds.add(first.id);
   const second = ReviewEngine.next(repository, session, 100, () => 0);
+  session.seenIds.add(second.id);
   assert.notEqual(first.id, second.id);
   assert.equal(ReviewEngine.next(repository, session, 100, () => 0), null);
 });
