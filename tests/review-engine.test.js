@@ -52,9 +52,27 @@ test('new, wrong and more overdue questions receive higher bounded weights', () 
 
 test('weighted picker handles empty input and deterministic boundaries', () => {
   assert.equal(ReviewEngine.pickWeighted([], () => 0), null);
-  const items = [{...base,id:'a'},{...base,id:'b'}];
-  assert.equal(ReviewEngine.pickWeighted(items, () => 0, 1000).id, 'a');
-  assert.equal(ReviewEngine.pickWeighted(items, () => 0.999999, 1000).id, 'b');
+  const items = ReviewEngine.weightedCandidates([{...base,id:'a'},{...base,id:'b'}], 1000);
+  assert.equal(ReviewEngine.pickWeighted(items, () => 0).id, 'a');
+  assert.equal(ReviewEngine.pickWeighted(items, () => 0.999999).id, 'b');
+});
+
+test('20 equal new questions produce a non-fixed distribution across 1000 weighted draws', () => {
+  let seed = 0x12345678;
+  const random = () => ((seed = (1664525 * seed + 1013904223) >>> 0) / 0x100000000);
+  const now = 100000;
+  const questions = Array.from({length:20}, (_,i) => ({...base,id:`q-${i}`,createdAt:i,lastReviewedAt:null,nextReviewAt:now}));
+  const candidates = ReviewEngine.weightedCandidates(ReviewEngine.dueQuestions(questions,new Set(),now),now);
+  const counts = new Map(questions.map(q => [q.id,0]));
+  const order = [];
+  for (let i=0;i<1000;i++) {
+    const picked = ReviewEngine.pickWeighted(candidates, random);
+    counts.set(picked.id, counts.get(picked.id)+1);
+    order.push(picked.id);
+  }
+  assert.equal([...counts.values()].filter(Boolean).length, 20);
+  assert.ok(new Set(order.slice(0,100)).size > 1);
+  assert.notDeepEqual(order.slice(0,20), questions.map(q => q.id));
 });
 
 test('session only excludes ids recorded after a successful submission', () => {

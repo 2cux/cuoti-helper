@@ -172,12 +172,23 @@
     const ReviewEngine={
       dueQuestions(questions,seenIds=new Set(),at=Date.now()){return questions.filter(q=>typeof q.id==='string'&&q.id&&Array.isArray(q.questionImages)&&q.questionImages.length>0&&Array.isArray(q.answerImages)&&q.answerImages.length>0&&Number.isFinite(q.nextReviewAt)&&q.hidden===false&&q.nextReviewAt<=at&&!seenIds.has(q.id));},
       weight(q,at=Date.now()){const timestamp=Number(q.nextReviewAt);const overdueDays=Number.isFinite(timestamp)?Math.max(0,(at-timestamp)/86400000):0;const overdueFactor=1+Math.min(overdueDays,REVIEW_WEIGHT_CONFIG.maximumOverdueDays)*REVIEW_WEIGHT_CONFIG.overdueDailyIncrease;const wrongFactor=q.lastResult==='wrong'?REVIEW_WEIGHT_CONFIG.wrongMultiplier:1;const newFactor=q.lastReviewedAt===null?REVIEW_WEIGHT_CONFIG.newQuestionMultiplier:1;return Math.min(REVIEW_WEIGHT_CONFIG.maximumWeight,Math.max(REVIEW_WEIGHT_CONFIG.minimumWeight,overdueFactor*wrongFactor*newFactor));},
-      pickWeighted(items,random=Math.random,at=Date.now()){if(!items.length)return null;const total=items.reduce((sum,q)=>sum+this.weight(q,at),0);let cursor=random()*total;for(const q of items){cursor-=this.weight(q,at);if(cursor<0)return q;}return items[items.length-1];},
+      weightedCandidates(questions,at=Date.now()){return questions.map(q=>({...q,weight:this.weight(q,at)}));},
+      pickWeighted(candidates,random=Math.random){if(!candidates.length)return null;const totalWeight=candidates.reduce((sum,q)=>sum+q.weight,0);let randomWeight=random()*totalWeight;for(const q of candidates){randomWeight-=q.weight;if(randomWeight<=0)return q;}return null;},
       createSession(repository,oldSession=null){const revision=repository.current?.revision||0;if(oldSession&&oldSession.revision===revision&&!oldSession.completed)return oldSession;return{revision,seenIds:new Set(),done:0,currentId:null,completed:false};},
-      next(repository,session,at=Date.now(),random=Math.random){const candidates=this.dueQuestions(repository.current?.questions||[],session.seenIds,at);const q=this.pickWeighted(candidates,random,at);if(!q){session.currentId=null;session.completed=true;return null;}session.currentId=q.id;return q;},
+      next(repository,session,at=Date.now(),random=Math.random){const due=this.dueQuestions(repository.current?.questions||[],session.seenIds,at);const candidates=this.weightedCandidates(due,at);const q=this.pickWeighted(candidates,random);if(!q){session.currentId=null;session.completed=true;return null;}session.currentId=q.id;return q;},
       resultPatch(question,result,at=Date.now()){if(result==='hide')return{hidden:true,lastReviewedAt:at,lastResult:question.lastResult,nextReviewAt:question.nextReviewAt};if(result==='correct'){const streak=Math.max(0,Number(question.correctStreak)||0)+1;const days=REVIEW_INTERVAL_DAYS[Math.min(streak-1,4)];return{correctStreak:streak,lastResult:'correct',lastReviewedAt:at,nextReviewAt:at+days*86400000};}return{correctStreak:0,lastResult:'wrong',lastReviewedAt:at,nextReviewAt:at+86400000};},
       applyResult(question,result,at=Date.now()){return this.resultPatch(question,result,at);}
     };
+    function runReviewRandomnessDevTest(){
+      if(typeof DEV_MODE==='undefined'||!DEV_MODE)return;
+      const at=Date.now(),questions=Array.from({length:20},(_,i)=>({id:`dev-random-${i+1}`,questionImages:[{}],answerImages:[{}],createdAt:at+i,nextReviewAt:at,lastReviewedAt:null,correctStreak:0,lastResult:null,hidden:false}));
+      const candidates=ReviewEngine.weightedCandidates(ReviewEngine.dueQuestions(questions,new Set(),at),at),counts=Object.fromEntries(questions.map(q=>[q.id,0])),order=[];
+      for(let i=0;i<1000;i++){const picked=ReviewEngine.pickWeighted(candidates);counts[picked.id]++;order.push(picked.id);}
+      const appeared=Object.values(counts).filter(Boolean).length,orderVaries=new Set(order).size>1;
+      console.assert(appeared===20&&orderVaries,'加权随机 DEV_MODE 自检失败：抽取结果疑似固定录入顺序',{counts,order:order.slice(0,40)});
+      console.info('[review-randomness] 20 道题 × 1000 次加权随机抽取',counts);
+    }
+    runReviewRandomnessDevTest();
     const ReviewSessionManager={key:'local-mistake-review.session',load(){try{const raw=sessionStorage.getItem(this.key);if(!raw)return null;const s=JSON.parse(raw);if(!s||typeof s.sessionId!=='string'||!Array.isArray(s.seenQuestionIds))return null;return s;}catch{return null;}},save(s){try{sessionStorage.setItem(this.key,JSON.stringify({sessionId:s.sessionId,startedAt:s.startedAt,seenQuestionIds:[...s.seenQuestionIds],completedCount:s.completedCount,currentQuestionId:s.currentQuestionId}));}catch{}},create(revision){return{sessionId:`review_${Date.now()}_${Math.random().toString(36).slice(2)}`,startedAt:Date.now(),seenQuestionIds:new Set(),completedCount:0,currentQuestionId:null,revision};},end(){try{sessionStorage.removeItem(this.key);}catch{}}};
     /* REVIEW_ENGINE_END */
     (function(){
