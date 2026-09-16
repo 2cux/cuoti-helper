@@ -31,6 +31,15 @@
     .brand-mark{width:40px;height:40px;border-radius:12px;overflow:hidden;background:transparent}
     .brand-mark img{display:block;width:40px;height:40px;object-fit:cover}
   </style>
+  <style>
+    /* Review images grow with their natural aspect ratio; the document owns scrolling. */
+    .question-image,.answer-image{display:block;height:auto;min-height:0;max-height:none;overflow:visible;align-items:initial;background:transparent}
+    .review-image-list{width:100%;max-width:900px;margin-inline:auto}
+    .review-question-image,.review-answer-image{display:block;width:100%;height:auto;max-width:100%;max-height:none;object-fit:initial;border-radius:var(--radius-control);cursor:zoom-in}
+    .review-image-list>.review-question-image+.review-question-image,.review-image-list>.review-answer-image+.review-answer-image{margin-top:22px}
+    .viewer-image{height:min(70vh,620px);overflow:hidden}
+    .viewer-image img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -186,11 +195,11 @@
   </script>
   <script>
     /* REVIEW_ENGINE_START */
-    const REVIEW_WEIGHT_CONFIG={overdueDailyIncrease:0.15,maximumOverdueDays:30,wrongMultiplier:1.8,newQuestionMultiplier:1.3,minimumWeight:1,maximumWeight:12};
+    const REVIEW_WEIGHT_CONFIG={newBaseWeight:9,wrongBaseWeight:4,correctBaseWeight:1,overdueDailyIncrease:0.1,maximumOverdueDays:30};
     const REVIEW_INTERVAL_DAYS=[1,3,7,14,30];
     const ReviewEngine={
       dueQuestions(questions,seenIds=new Set(),at=Date.now()){return questions.filter(q=>typeof q.id==='string'&&q.id&&Array.isArray(q.questionImages)&&q.questionImages.length>0&&Array.isArray(q.answerImages)&&q.answerImages.length>0&&Number.isFinite(q.nextReviewAt)&&q.hidden===false&&q.nextReviewAt<=at&&!seenIds.has(q.id));},
-      weight(q,at=Date.now()){const timestamp=Number(q.nextReviewAt);const overdueDays=Number.isFinite(timestamp)?Math.max(0,(at-timestamp)/86400000):0;const overdueFactor=1+Math.min(overdueDays,REVIEW_WEIGHT_CONFIG.maximumOverdueDays)*REVIEW_WEIGHT_CONFIG.overdueDailyIncrease;const wrongFactor=q.lastResult==='wrong'?REVIEW_WEIGHT_CONFIG.wrongMultiplier:1;const newFactor=q.lastReviewedAt===null?REVIEW_WEIGHT_CONFIG.newQuestionMultiplier:1;return Math.min(REVIEW_WEIGHT_CONFIG.maximumWeight,Math.max(REVIEW_WEIGHT_CONFIG.minimumWeight,overdueFactor*wrongFactor*newFactor));},
+      weight(q,at=Date.now()){const isNew=q.lastReviewedAt===null||q.lastResult===null;const baseWeight=isNew?REVIEW_WEIGHT_CONFIG.newBaseWeight:q.lastResult==='wrong'?REVIEW_WEIGHT_CONFIG.wrongBaseWeight:REVIEW_WEIGHT_CONFIG.correctBaseWeight;const timestamp=Number(q.nextReviewAt);const overdueDays=Number.isFinite(timestamp)?Math.max(0,(at-timestamp)/86400000):0;const timeFactor=1+Math.min(overdueDays,REVIEW_WEIGHT_CONFIG.maximumOverdueDays)*REVIEW_WEIGHT_CONFIG.overdueDailyIncrease;return baseWeight*timeFactor;},
       weightedCandidates(questions,at=Date.now()){return questions.map(q=>({...q,weight:this.weight(q,at)}));},
       pickWeighted(candidates,random=Math.random){if(!candidates.length)return null;const totalWeight=candidates.reduce((sum,q)=>sum+q.weight,0);let randomWeight=random()*totalWeight;for(const q of candidates){randomWeight-=q.weight;if(randomWeight<=0)return q;}return null;},
       createSession(repository,oldSession=null){const revision=repository.current?.revision||0;if(oldSession&&oldSession.revision===revision&&!oldSession.completed)return oldSession;return{revision,seenIds:new Set(),done:0,currentId:null,completed:false};},
@@ -200,12 +209,12 @@
     };
     function runReviewRandomnessDevTest(){
       if(typeof DEV_MODE==='undefined'||!DEV_MODE)return;
-      const at=Date.now(),questions=Array.from({length:20},(_,i)=>({id:`dev-random-${i+1}`,questionImages:[{}],answerImages:[{}],createdAt:at+i,nextReviewAt:at,lastReviewedAt:null,correctStreak:0,lastResult:null,hidden:false}));
-      const candidates=ReviewEngine.weightedCandidates(ReviewEngine.dueQuestions(questions,new Set(),at),at),counts=Object.fromEntries(questions.map(q=>[q.id,0])),order=[];
-      for(let i=0;i<1000;i++){const picked=ReviewEngine.pickWeighted(candidates);counts[picked.id]++;order.push(picked.id);}
-      const appeared=Object.values(counts).filter(Boolean).length,orderVaries=new Set(order).size>1;
-      console.assert(appeared===20&&orderVaries,'加权随机 DEV_MODE 自检失败：抽取结果疑似固定录入顺序',{counts,order:order.slice(0,40)});
-      console.info('[review-randomness] 20 道题 × 1000 次加权随机抽取',counts);
+      const at=Date.now(),makeQuestions=(prefix,lastReviewedAt,lastResult)=>Array.from({length:10},(_,i)=>({id:`dev-${prefix}-${i+1}`,questionImages:[{}],answerImages:[{}],createdAt:at+i,nextReviewAt:at,lastReviewedAt,correctStreak:0,lastResult,hidden:false})),questions=[...makeQuestions('new',null,null),...makeQuestions('wrong',at-86400000,'wrong'),...makeQuestions('correct',at-86400000,'correct')];
+      const candidates=ReviewEngine.weightedCandidates(ReviewEngine.dueQuestions(questions,new Set(),at),at),counts=Object.fromEntries(questions.map(q=>[q.id,0])),categoryCounts={new:0,wrong:0,correct:0},categoryOrders={new:[],wrong:[],correct:[]};
+      for(let i=0;i<5000;i++){const picked=ReviewEngine.pickWeighted(candidates),category=picked.id.split('-')[1];counts[picked.id]++;categoryCounts[category]++;categoryOrders[category].push(picked.id);}
+      const appeared=Object.values(counts).filter(Boolean).length,ordersVary=Object.values(categoryOrders).every(order=>new Set(order).size>1),prioritiesHold=categoryCounts.new>categoryCounts.wrong&&categoryCounts.wrong>categoryCounts.correct;
+      console.assert(appeared===30&&ordersVary&&prioritiesHold,'加权随机 DEV_MODE 自检失败：未满足三层优先级或同类随机性',{categoryCounts,counts});
+      console.info('[review-randomness] 30 道题（各类 10 道）× 5000 次独立加权随机抽取',{categoryCounts,counts});
     }
     runReviewRandomnessDevTest();
     const ReviewScheduler=ReviewEngine;
@@ -243,10 +252,15 @@
       const answer=$('answer'),answerImage=$('answerImage'),done=$('done'),questionCard=document.querySelector('.question-card'),emptyCard=$('reviewEmptyCard'),emptyTitle=$('reviewEmptyTitle'),emptyDescription=$('reviewEmptyDescription'),emptyCount=$('reviewEmptyCount'),emptyHome=$('reviewEmptyHome'),emptyCapture=$('reviewEmptyCapture');
       let currentImageUrls=[];
       let answerVisible=false;
-      function releaseCurrentQuestionResources(){currentImageUrls.forEach(u=>URL.revokeObjectURL(u));currentImageUrls=[];questionImage.replaceChildren();answerImage.replaceChildren();}
+      const viewerBackdrop=$('viewerBackdrop'),viewerImage=$('viewerImage'),viewerPrev=$('prev'),viewerNext=$('next'),viewerClose=$('closeViewer');
+      let viewerItems=[],viewerIndex=0,viewerReturnFocus=null;
+      function renderViewerImage(){const item=viewerItems[viewerIndex];viewerImage.replaceChildren();if(!item)return;const img=document.createElement('img');img.src=item.src;img.alt=item.alt;viewerImage.append(img);viewerPrev.disabled=viewerIndex===0;viewerNext.disabled=viewerIndex===viewerItems.length-1;}
+      function openViewer(source,selected){viewerItems=[...source.querySelectorAll('img')];if(!viewerItems.length)return;viewerIndex=Math.max(0,viewerItems.indexOf(selected));viewerReturnFocus=selected;renderViewerImage();viewerBackdrop.classList.add('open');viewerClose.focus();}
+      function closeViewer(){viewerBackdrop.classList.remove('open');viewerImage.replaceChildren();viewerItems=[];viewerReturnFocus?.focus?.();viewerReturnFocus=null;}
+      function releaseCurrentQuestionResources(){closeViewer();currentImageUrls.forEach(u=>URL.revokeObjectURL(u));currentImageUrls=[];questionImage.replaceChildren();answerImage.replaceChildren();}
       const clearImages=releaseCurrentQuestionResources;
       function placeholder(target,text){target.textContent=text;target.style.display='grid';}
-      async function loadImages(question,kind,target){target.replaceChildren();const images=(question?.[kind]||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0));if(!images.length){placeholder(target,kind==='questionImages'?'暂无题目图片':'暂无答案图片');return;}let box,failed=0;try{box=await FolderManager.handle.getDirectoryHandle('images');}catch(e){placeholder(target,'图片文件夹无法读取');throw e;}for(const meta of images){try{const file=await(await box.getFileHandle(meta.fileName)).getFile();const url=URL.createObjectURL(file);currentImageUrls.push(url);const img=document.createElement('img');img.src=url;img.alt=kind==='questionImages'?'题目图片':'答案图片';img.style.cssText='display:block;width:100%;max-height:520px;object-fit:contain;border-radius:inherit;margin:8px 0';target.append(img);}catch(e){failed++;const missing=document.createElement('div');missing.textContent='图片缺失或读取失败';missing.style.color='var(--muted)';target.append(missing);notifySafely('图片读取失败，题目状态未改变','warning');}}if(failed)throw makeError('ImageLoadError','有图片无法读取');}
+      async function loadImages(question,kind,target){target.replaceChildren();target.classList.add('review-image-list');const images=(question?.[kind]||[]).slice().sort((a,b)=>(a.order||0)-(b.order||0));if(!images.length){placeholder(target,kind==='questionImages'?'暂无题目图片':'暂无答案图片');return;}let box,failed=0;try{box=await FolderManager.handle.getDirectoryHandle('images');}catch(e){placeholder(target,'图片文件夹无法读取');throw e;}for(const [index,meta] of images.entries()){try{const file=await(await box.getFileHandle(meta.fileName)).getFile();const url=URL.createObjectURL(file);currentImageUrls.push(url);const img=document.createElement('img');img.src=url;img.alt=`${kind==='questionImages'?'题目':'答案'}图片 ${index+1}`;img.className=kind==='questionImages'?'review-question-image':'review-answer-image';img.tabIndex=0;img.setAttribute('role','button');img.setAttribute('aria-label',`${img.alt}，点击全屏查看`);target.append(img);}catch(e){failed++;const missing=document.createElement('div');missing.textContent='图片缺失或读取失败';missing.style.color='var(--muted)';target.append(missing);notifySafely('图片读取失败，题目状态未改变','warning');}}if(failed)throw makeError('ImageLoadError','有图片无法读取');}
       function reviewEmptyState(){const questions=AppState.qr?.all?.()||[];const session=AppState.reviewSession;const completed=Number(session?.completedCount||session?.done||0);if(!questions.length)return{reason:'empty-library',title:'还没有录入错题',description:'先收录一道题目和答案，系统会将它加入随机复习。',count:'',announcement:''};if(completed>0)return{reason:'session-complete',title:'本次复习已完成',description:`本次共完成 ${completed} 道题，当前没有其他需要复习的题目。`,count:'',announcement:'本次复习已完成'};return{reason:'no-due-questions',title:'当前没有到期题目',description:'题目将在到达下次复习时间后重新出现。',count:'',announcement:'当前没有到期题目'};}
       function showReviewEmptyState(){const state=reviewEmptyState();setReviewEmptyReason(state.reason);questionCard.hidden=true;emptyCard.hidden=false;emptyTitle.textContent=state.title;emptyDescription.textContent=state.description;emptyCount.hidden=!state.count;emptyCount.textContent=state.count;emptyCapture.textContent=(AppState.qr?.all?.()||[]).length?'录入新错题':'录入第一道错题';emptyTitle.setAttribute('aria-live','polite');requestAnimationFrame(()=>emptyTitle.focus());}
       function hideReviewEmptyState(){setReviewEmptyReason(null);questionCard.hidden=false;emptyCard.hidden=true;}
@@ -375,7 +389,13 @@
       document.addEventListener('click',e=>{const route=e.target.closest('[data-route]')?.dataset.route;if(route==='review'){e.preventDefault();e.stopImmediatePropagation();startReview();}},true);
       showAnswer.addEventListener('click',async()=>{const q=currentQuestion();if(!q)return;showAnswer.disabled=true;answer.classList.add('open');answerImage.textContent='正在加载答案';try{await loadImages(q,'answerImages',answerImage);right.disabled=wrong.disabled=hide.disabled=false;showAnswer.textContent='答案已加载';}catch(e){right.disabled=wrong.disabled=hide.disabled=true;showAnswer.disabled=false;showAnswer.textContent='重试加载答案';ErrorManager.show(e,'答案加载失败');}});
       right.addEventListener('click',()=>submitReviewResult('correct'));wrong.addEventListener('click',()=>submitReviewResult('wrong'));hide.addEventListener('click',()=>{if(AppState.reviewSession?.isSubmittingResult)return;DialogManager.open({title:'确认不再展示',text:'确定不再展示这道题吗？确认后，这道题将永久退出随机复习；图片文件会保留。',onConfirm:()=>submitReviewResult('hide')});});
-      questionImage.addEventListener('click',()=>{if(currentQuestion()?.questionImages?.length)notifySafely('题目图片已按需加载');else notifySafely('当前题目没有图片','warning');});
+      questionImage.addEventListener('click',event=>{if(event.target.matches('img'))openViewer(questionImage,event.target);});
+      answerImage.addEventListener('click',event=>{if(event.target.matches('img'))openViewer(answerImage,event.target);});
+      viewerPrev.addEventListener('click',()=>{if(viewerIndex>0){viewerIndex--;renderViewerImage();}});
+      viewerNext.addEventListener('click',()=>{if(viewerIndex<viewerItems.length-1){viewerIndex++;renderViewerImage();}});
+      viewerClose.addEventListener('click',closeViewer);
+      viewerBackdrop.addEventListener('click',event=>{if(event.target===viewerBackdrop)closeViewer();});
+      document.addEventListener('keydown',event=>{if(!viewerBackdrop.classList.contains('open'))return;if(event.key==='Escape')closeViewer();if(event.key==='ArrowLeft'&&viewerIndex>0){viewerIndex--;renderViewerImage();}if(event.key==='ArrowRight'&&viewerIndex<viewerItems.length-1){viewerIndex++;renderViewerImage();}});
       document.querySelector('main').addEventListener('click',event=>{const el=event.target.closest('[data-action]');if(!el)return;event.preventDefault();if(el.dataset.action==='review-return-home')handleReviewReturnHome();if(el.dataset.action==='review-open-capture')handleReviewOpenCapture();});
       document.addEventListener('click',e=>{if(e.target.closest('[data-route="home"]')&&AppState.reviewSession){e.preventDefault();e.stopImmediatePropagation();handleReviewReturnHome();}},true);
       window.addEventListener('pagehide',releaseCurrentQuestionResources);

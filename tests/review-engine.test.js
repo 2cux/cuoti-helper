@@ -39,15 +39,18 @@ test('hidden, future, malformed and seen questions are excluded', () => {
   assert.deepEqual(candidates, []);
 });
 
-test('new, wrong and more overdue questions receive higher bounded weights', () => {
+test('new, wrong and correct questions use the specified layered overdue weights', () => {
   const now = 31 * day;
-  const fresh = {...base,lastReviewedAt:null,nextReviewAt:now};
-  const wrong = {...base,lastResult:'wrong',nextReviewAt:now-day};
-  const older = {...base,nextReviewAt:now-20*day};
-  assert.ok(ReviewEngine.weight(fresh, now) > 1);
-  assert.ok(ReviewEngine.weight(wrong, now) > ReviewEngine.weight({...base,nextReviewAt:now}, now));
-  assert.ok(ReviewEngine.weight(older, now) > ReviewEngine.weight({...base,nextReviewAt:now-day}, now));
-  assert.ok(ReviewEngine.weight({...base,nextReviewAt:now-1000*day}, now) <= 12);
+  const fresh = {...base,lastReviewedAt:null,lastResult:'correct',nextReviewAt:now};
+  const unresulted = {...base,lastReviewedAt:now-day,lastResult:null,nextReviewAt:now};
+  const wrong = {...base,lastResult:'wrong',nextReviewAt:now};
+  const correct = {...base,lastResult:'correct',nextReviewAt:now};
+  assert.equal(ReviewEngine.weight(fresh, now), 9);
+  assert.equal(ReviewEngine.weight(unresulted, now), 9);
+  assert.equal(ReviewEngine.weight(wrong, now), 4);
+  assert.equal(ReviewEngine.weight(correct, now), 1);
+  assert.equal(ReviewEngine.weight({...correct,nextReviewAt:now-20*day}, now), 3);
+  assert.equal(ReviewEngine.weight({...correct,nextReviewAt:now-1000*day}, now), 4);
 });
 
 test('weighted picker handles empty input and deterministic boundaries', () => {
@@ -57,22 +60,31 @@ test('weighted picker handles empty input and deterministic boundaries', () => {
   assert.equal(ReviewEngine.pickWeighted(items, () => 0.999999).id, 'b');
 });
 
-test('20 equal new questions produce a non-fixed distribution across 1000 weighted draws', () => {
+test('10 new, 10 wrong and 10 correct questions follow priority and remain random within each category', () => {
   let seed = 0x12345678;
   const random = () => ((seed = (1664525 * seed + 1013904223) >>> 0) / 0x100000000);
   const now = 100000;
-  const questions = Array.from({length:20}, (_,i) => ({...base,id:`q-${i}`,createdAt:i,lastReviewedAt:null,nextReviewAt:now}));
+  const questions = [
+    ...Array.from({length:10}, (_,i) => ({...base,id:`new-${i}`,createdAt:i,lastReviewedAt:null,lastResult:null,nextReviewAt:now})),
+    ...Array.from({length:10}, (_,i) => ({...base,id:`wrong-${i}`,createdAt:i,lastReviewedAt:now-day,lastResult:'wrong',nextReviewAt:now})),
+    ...Array.from({length:10}, (_,i) => ({...base,id:`correct-${i}`,createdAt:i,lastReviewedAt:now-day,lastResult:'correct',nextReviewAt:now}))
+  ];
   const candidates = ReviewEngine.weightedCandidates(ReviewEngine.dueQuestions(questions,new Set(),now),now);
   const counts = new Map(questions.map(q => [q.id,0]));
   const order = [];
-  for (let i=0;i<1000;i++) {
+  const categories = {new:0,wrong:0,correct:0};
+  const categoryIds = {new:new Set(),wrong:new Set(),correct:new Set()};
+  for (let i=0;i<5000;i++) {
     const picked = ReviewEngine.pickWeighted(candidates, random);
     counts.set(picked.id, counts.get(picked.id)+1);
     order.push(picked.id);
+    const category = picked.id.split('-')[0];
+    categories[category]++;
+    categoryIds[category].add(picked.id);
   }
-  assert.equal([...counts.values()].filter(Boolean).length, 20);
-  assert.ok(new Set(order.slice(0,100)).size > 1);
-  assert.notDeepEqual(order.slice(0,20), questions.map(q => q.id));
+  assert.ok(categories.new > categories.wrong && categories.wrong > categories.correct, JSON.stringify(categories));
+  assert.ok(Object.values(categoryIds).every(ids => ids.size > 1));
+  assert.notDeepEqual(order.slice(0,30), questions.map(q => q.id));
 });
 
 test('session only excludes ids recorded after a successful submission', () => {
