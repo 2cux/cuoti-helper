@@ -197,8 +197,8 @@
     /* REVIEW_ENGINE_START */
     const REVIEW_WEIGHT_CONFIG={newBaseWeight:9,wrongBaseWeight:4,correctBaseWeight:1,overdueDailyIncrease:0.1,maximumOverdueDays:30};
     // New questions remain due immediately on save. Once a question has been
-    // reviewed, every following review is scheduled at least one week ahead.
-    const REVIEW_INTERVAL_DAYS=[7,7,7,14,30];
+    // reviewed, every following review is scheduled at least two weeks ahead.
+    const REVIEW_INTERVAL_DAYS=[14,14,14,14,30];
     const ReviewEngine={
       dueQuestions(questions,seenIds=new Set(),at=Date.now()){return questions.filter(q=>typeof q.id==='string'&&q.id&&Array.isArray(q.questionImages)&&q.questionImages.length>0&&Array.isArray(q.answerImages)&&q.answerImages.length>0&&Number.isFinite(q.nextReviewAt)&&q.hidden===false&&q.nextReviewAt<=at&&!seenIds.has(q.id));},
       weight(q,at=Date.now()){const isNew=q.lastReviewedAt===null||q.lastResult===null;const baseWeight=isNew?REVIEW_WEIGHT_CONFIG.newBaseWeight:q.lastResult==='wrong'?REVIEW_WEIGHT_CONFIG.wrongBaseWeight:REVIEW_WEIGHT_CONFIG.correctBaseWeight;const timestamp=Number(q.nextReviewAt);const overdueDays=Number.isFinite(timestamp)?Math.max(0,(at-timestamp)/86400000):0;const timeFactor=1+Math.min(overdueDays,REVIEW_WEIGHT_CONFIG.maximumOverdueDays)*REVIEW_WEIGHT_CONFIG.overdueDailyIncrease;return baseWeight*timeFactor;},
@@ -206,7 +206,7 @@
       pickWeighted(candidates,random=Math.random){if(!candidates.length)return null;const totalWeight=candidates.reduce((sum,q)=>sum+q.weight,0);let randomWeight=random()*totalWeight;for(const q of candidates){randomWeight-=q.weight;if(randomWeight<=0)return q;}return null;},
       createSession(repository,oldSession=null){const revision=repository.current?.revision||0;if(oldSession&&oldSession.revision===revision&&!oldSession.completed)return oldSession;return{revision,seenIds:new Set(),done:0,currentId:null,completed:false};},
       next(repository,session,at=Date.now(),random=Math.random){const due=this.dueQuestions(repository.current?.questions||[],session.seenIds,at);const candidates=this.weightedCandidates(due,at);const q=this.pickWeighted(candidates,random);if(!q){session.currentId=null;session.completed=true;return null;}session.currentId=q.id;return q;},
-      resultPatch(question,result,at=Date.now()){if(result==='hide')return{hidden:true,lastReviewedAt:at,lastResult:question.lastResult,nextReviewAt:question.nextReviewAt};if(result==='correct'){const streak=Math.max(0,Number(question.correctStreak)||0)+1;const days=REVIEW_INTERVAL_DAYS[Math.min(streak-1,4)];return{correctStreak:streak,lastResult:'correct',lastReviewedAt:at,nextReviewAt:at+days*86400000};}return{correctStreak:0,lastResult:'wrong',lastReviewedAt:at,nextReviewAt:at+7*86400000};},
+      resultPatch(question,result,at=Date.now()){if(result==='hide')return{hidden:true,lastReviewedAt:at,lastResult:question.lastResult,nextReviewAt:question.nextReviewAt};if(result==='correct'){const streak=Math.max(0,Number(question.correctStreak)||0)+1;const days=REVIEW_INTERVAL_DAYS[Math.min(streak-1,4)];return{correctStreak:streak,lastResult:'correct',lastReviewedAt:at,nextReviewAt:at+days*86400000};}return{correctStreak:0,lastResult:'wrong',lastReviewedAt:at,nextReviewAt:at+14*86400000};},
       applyResult(question,result,at=Date.now()){return this.resultPatch(question,result,at);}
     };
     function runReviewRandomnessDevTest(){

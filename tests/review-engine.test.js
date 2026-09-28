@@ -8,25 +8,25 @@ const ReviewEngine = Function('window', 'AppState', `${source}; return ReviewEng
 const day = 86400000;
 const base = {id:'q',questionImages:[{fileName:'q.webp'}],answerImages:[{fileName:'a.webp'}],hidden:false,nextReviewAt:1000,lastReviewedAt:1000,correctStreak:0,lastResult:null};
 
-test('correct intervals are 7, 7, 7, 14, 30 days and stay capped', () => {
+test('correct intervals are 14, 14, 14, 14, 30 days and stay capped', () => {
   for (let streak = 0; streak <= 6; streak++) {
     const q = {...base, correctStreak:streak};
     const patch = ReviewEngine.applyResult(q, 'correct', 1000);
-    assert.equal(patch.nextReviewAt, 1000 + [7,7,7,14,30][Math.min(streak,4)] * day);
+    assert.equal(patch.nextReviewAt, 1000 + [14,14,14,14,30][Math.min(streak,4)] * day);
   }
 });
 
-test('wrong resets streak and schedules seven days later', () => {
+test('wrong resets streak and schedules fourteen days later', () => {
   const patch = ReviewEngine.applyResult({...base,correctStreak:4}, 'wrong', 5000);
-  assert.deepEqual(patch, {correctStreak:0,lastResult:'wrong',lastReviewedAt:5000,nextReviewAt:5000+7*day});
+  assert.deepEqual(patch, {correctStreak:0,lastResult:'wrong',lastReviewedAt:5000,nextReviewAt:5000+14*day});
 });
 
-test('a completed question is not due again before seven days', () => {
+test('a completed question is not due again before fourteen days', () => {
   const at = 5000;
   for (const result of ['correct', 'wrong']) {
     const patch = ReviewEngine.applyResult(base, result, at);
-    assert.deepEqual(ReviewEngine.dueQuestions([{...base, ...patch}], new Set(), at + 7 * day - 1), []);
-    assert.equal(ReviewEngine.dueQuestions([{...base, ...patch}], new Set(), at + 7 * day).length, 1);
+    assert.deepEqual(ReviewEngine.dueQuestions([{...base, ...patch}], new Set(), at + 14 * day - 1), []);
+    assert.equal(ReviewEngine.dueQuestions([{...base, ...patch}], new Set(), at + 14 * day).length, 1);
   }
 });
 
