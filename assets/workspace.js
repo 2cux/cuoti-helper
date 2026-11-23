@@ -18,7 +18,10 @@
       const summary = footer?.querySelector('span');
       if (summary) summary.textContent = state.processing ? '正在处理图片，请稍候…' : ready ? `已就绪 · ${state.question.length} 张题目 / ${state.answer.length} 张答案` : state.question.length ? '题目已收好，再添加答案就可以保存' : state.answer.length ? '答案已收好，再添加题目就可以保存' : '先放入题目，再收好答案';
       const save = document.getElementById('save');
-      if (save) { save.textContent = state.saving ? '正在保存…' : state.processing ? '正在处理图片…' : '保存这道错题'; save.setAttribute('aria-busy',String(state.saving || state.processing)); }
+      if (save) {
+        save.textContent = state.loadingEdit ? '正在读取错题…' : state.saving ? '正在保存…' : state.processing ? '正在处理图片…' : state.editId ? '保存修改' : '保存这道错题';
+        save.setAttribute('aria-busy',String(!!(state.loadingEdit || state.saving || state.processing)));
+      }
     },
     result(result) {
       const counter = document.getElementById('done');
